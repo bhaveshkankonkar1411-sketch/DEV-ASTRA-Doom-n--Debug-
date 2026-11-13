@@ -172,7 +172,6 @@ export const getProductById = async (req, res, next) => {
  */
 export const analyzeProduct = async (req, res, next) => {
   try {
-<<<<<<< HEAD
     const productId = req.params.id || req.body.productId;
     const context = req.body.analysisContext || {};
     const desiredMargin = context.desiredMarginPercent || 30;
