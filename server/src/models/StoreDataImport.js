@@ -8,7 +8,7 @@ const storeDataImportSchema = new mongoose.Schema(
     status: { type: String, enum: ['PROCESSING', 'COMPLETED', 'FAILED'], default: 'PROCESSING' },
     errors: [{ type: String }],
   },
-  { timestamps: true }
+  { timestamps: true, suppressReservedKeysWarning: true }
 );
 
 export default mongoose.model('StoreDataImport', storeDataImportSchema);
