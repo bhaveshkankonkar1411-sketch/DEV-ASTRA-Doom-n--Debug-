@@ -98,3 +98,4 @@ All calculations are executed in integer minor units (paise) where appropriate t
 Every controller and service module implements graceful fallback:
 - When MongoDB is online: queries utilize Mongoose schemas with indexed fields and relationship populations.
 - When MongoDB is offline: queries immediately fallback to in-memory fixtures (`sampleProducts`, `sampleSuppliers`, `sampleOrders`, `sampleGoals`) without stalling requests or throwing unhandled connection timeouts.
+
