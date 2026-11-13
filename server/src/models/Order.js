@@ -12,7 +12,9 @@ const orderSchema = new mongoose.Schema(
     shippingCost: { type: Number, default: 0 },
     platformFee: { type: Number, default: 0 },
     adSpend: { type: Number, default: 0 },
+    otherExpenses: { type: Number, default: 0 },
     netProfit: { type: Number, required: true },
+    currency: { type: String, default: 'INR' },
     source: { type: String, enum: ['SHOPIFY', 'CSV_IMPORT', 'MANUAL'], default: 'CSV_IMPORT' },
   },
   { timestamps: true }
