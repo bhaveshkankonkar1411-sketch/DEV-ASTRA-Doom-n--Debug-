@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import User from '../models/User.js';
 import Order from '../models/Order.js';
 import StoreDataImport from '../models/StoreDataImport.js';
 import { sampleOrderRecords } from '../fixtures/sampleData.js';
@@ -268,11 +269,22 @@ export const importCsv = async (req, res, next) => {
         .json(formatError('CSV contains no valid order rows', 'CSV_INVALID', report.errors));
     }
 
-    const userId = req.user?.id || 'demo_user';
     const isDbConnected = mongoose.connection.readyState === 1;
+    let userId = req.user?.id || req.user?._id;
+    if (isDbConnected && (!userId || !mongoose.Types.ObjectId.isValid(userId))) {
+      try {
+        const dbUser = (await User.findOne({ email: req.user?.email })) || 
+                       (await User.findOne({ email: 'ratneshshirodkar17@gmail.com' })) || 
+                       (await User.findOne());
+        userId = dbUser ? dbUser._id : new mongoose.Types.ObjectId();
+      } catch {
+        userId = new mongoose.Types.ObjectId();
+      }
+    } else if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      userId = new mongoose.Types.ObjectId().toString();
+    }
 
-    const newOrders = report.allValidRecords.map((r, idx) => ({
-      _id: `ord_${Date.now()}_${idx}`,
+    const newOrders = report.allValidRecords.map((r) => ({
       userId,
       externalOrderId: r.order_id,
       orderDate: r.date,

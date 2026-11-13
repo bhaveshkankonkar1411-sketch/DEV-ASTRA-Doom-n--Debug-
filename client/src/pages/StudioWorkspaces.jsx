@@ -2,6 +2,7 @@ import { calculateGoal } from '../utils/workspaceMath';
 import { useEffect, useState } from 'react';
 import { Field, Icon, money, PageHead, ProductArt, products, useStored } from '../components/StudioUI';
 import { GoalRing } from '../components/charts/StudioCharts';
+import goalService from '../services/goalService';
 import listingService from '../services/listingService';
 import productService from '../services/productService';
 import shopifyService from '../services/shopifyService';
@@ -22,6 +23,60 @@ export function Discovery({
   const [loading, setLoading] = useState(!demoMode);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
+
+  // Phase 2: Hugging Face Semantic Search State
+  const [semanticMode, setSemanticMode] = useState(false);
+  const [semanticItems, setSemanticItems] = useState(null);
+  const [semanticMeta, setSemanticMeta] = useState(null);
+  const [semanticLoading, setSemanticLoading] = useState(false);
+
+  // Phase 3: Multi-Criteria Opportunity Recommendations State
+  const [opportunityItems, setOpportunityItems] = useState(null);
+  const [topExplanation, setTopExplanation] = useState(null);
+  const [opportunityLoading, setOpportunityLoading] = useState(false);
+
+  const fetchRecommendations = async (q = '') => {
+    setOpportunityLoading(true);
+    try {
+      const res = await productService.getRecommendations({ query: q, includeExplanation: true });
+      if (res.data?.recommendations) {
+        setOpportunityItems(res.data.recommendations);
+        const top = res.data.recommendations.find(r => r.aiExplanation);
+        setTopExplanation(top ? { ...top.aiExplanation, productName: top.product.title || top.product.name, score: top.opportunityScore } : null);
+      }
+    } catch {
+      setOpportunityItems(null);
+    } finally {
+      setOpportunityLoading(false);
+    }
+  };
+
+  const runSemanticSearch = async (text) => {
+    if (!text || !text.trim()) {
+      setSemanticItems(null);
+      setSemanticMeta(null);
+      return;
+    }
+    setSemanticLoading(true);
+    try {
+      const res = await productService.semanticSearch(text.trim());
+      if (res.data?.results) {
+        setSemanticItems(res.data.results);
+        setSemanticMeta({
+          inferenceMode: res.data.inferenceMode,
+          isFallback: res.data.isFallback,
+          model: res.data.model,
+          provider: res.data.provider,
+          fallbackReason: res.data.fallbackReason,
+        });
+      }
+    } catch {
+      setSemanticItems(null);
+      setSemanticMeta(null);
+    } finally {
+      setSemanticLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (demoMode || usingSamples) {
@@ -52,45 +107,214 @@ export function Discovery({
   const sampleMode = demoMode || usingSamples;
   const catalogue = sampleMode ? products : apiProducts;
   const categories = [...new Set(catalogue.map(product => product.category))];
-  const list = catalogue
-    .filter(product => (category === 'All products' || product.category === category) &&
-      (product.name + ' ' + product.category).toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => sort === 'score' ? b.score - a.score : (b.price - b.cost) - (a.price - a.cost));
+
+  let list = [];
+  if (sort === 'opportunity' && opportunityItems) {
+    list = opportunityItems.map(item => ({
+      ...item.product,
+      id: item.product.id || item.product._id,
+      name: item.product.title || item.product.name,
+      price: item.product.suggestedRetailPrice || item.product.price,
+      cost: item.product.estimatedCost || item.product.cost,
+      score: item.product.demandScore || item.product.score,
+      opportunityScore: item.opportunityScore,
+      scoreBreakdown: item.scoreBreakdown,
+      recommendationReason: item.recommendationReason,
+    })).filter(product => (category === 'All products' || product.category === category));
+  } else if (semanticMode && semanticItems) {
+    list = semanticItems.map(item => ({
+      ...item.product,
+      id: item.product.id || item.product._id,
+      name: item.product.title || item.product.name,
+      price: item.product.suggestedRetailPrice || item.product.price,
+      cost: item.product.estimatedCost || item.product.cost,
+      score: item.product.demandScore || item.product.score,
+      similarityScore: item.similarityScore,
+      semanticModel: item.model,
+    }));
+  } else {
+    list = catalogue
+      .filter(product => (category === 'All products' || product.category === category) &&
+        (product.name + ' ' + product.category).toLowerCase().includes(query.toLowerCase()))
+      .sort((a, b) => sort === 'score' ? b.score - a.score : (b.price - b.cost) - (a.price - a.cost));
+  }
 
   return <>
     <PageHead eyebrow="Find your edge" title="Your next bestseller starts here."
-      description={sampleMode ? 'Explore the clearly labelled local sample catalogue.' : 'Search the backend product catalogue and review its source label, demand score, cost, and price.'}
+      description={sampleMode ? 'Explore the clearly labelled local sample catalogue.' : 'Search the backend product catalogue with keyword, Hugging Face semantic embeddings, or multi-criteria opportunity scoring.'}
       action={<span className="badge">{sampleMode ? 'Local demo catalogue' : 'Backend catalogue'}</span>} />
     <div className="panel filters">
-      <label className="search-field"><Icon name="search" /><input aria-label="Search catalogue" placeholder="Search products or niches…" value={query} onChange={event => setQuery(event.target.value)} /></label>
+      <label className="search-field"><Icon name="search" /><input aria-label="Search catalogue" placeholder={semanticMode ? 'Search by concept (e.g. ergonomic desk typing, summer cooling)...' : 'Search products or niches…'} value={query} onChange={event => {
+        setQuery(event.target.value);
+        if (semanticMode) runSemanticSearch(event.target.value);
+        if (sort === 'opportunity') fetchRecommendations(event.target.value);
+      }} onKeyDown={event => {
+        if (event.key === 'Enter' && semanticMode) runSemanticSearch(query);
+        if (event.key === 'Enter' && sort === 'opportunity') fetchRecommendations(query);
+      }} /></label>
       <select aria-label="Product category" value={category} onChange={event => setCategory(event.target.value)}>
         {['All products', ...categories].map(value => <option key={value}>{value}</option>)}
       </select>
-      <select aria-label="Sort products" value={sort} onChange={event => setSort(event.target.value)}>
-        <option value="score">Highest demand score</option><option value="margin">Highest gross profit</option>
+      <select aria-label="Sort products" value={sort} onChange={event => {
+        const nextSort = event.target.value;
+        setSort(nextSort);
+        if (nextSort === 'opportunity') fetchRecommendations(query);
+      }}>
+        <option value="score">Highest demand score</option>
+        <option value="margin">Highest gross profit</option>
+        <option value="opportunity">⭐ AI Opportunity (Multi-Criteria)</option>
       </select>
+      <button
+        type="button"
+        className={semanticMode ? 'primary' : 'secondary'}
+        style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}
+        onClick={() => {
+          const next = !semanticMode;
+          setSemanticMode(next);
+          if (next && query.trim()) runSemanticSearch(query);
+          else setSemanticItems(null);
+        }}
+      >
+        <Icon name="spark" size={15} />
+        {semanticMode ? '⚡ Semantic AI Active' : 'Semantic Search (MiniLM)'}
+      </button>
     </div>
+    {semanticMode && <div className="insight" style={{ marginBottom: '14px' }}>
+      <Icon name="spark" />
+      <p><b>Hugging Face Semantic Search Active (`sentence-transformers/all-MiniLM-L6-v2`)</b>: Matches products by conceptual meaning and dense vector distance rather than exact substring matching.</p>
+    </div>}
+    {sort === 'opportunity' && topExplanation && (
+      <div className="panel" style={{ marginBottom: '16px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08))', border: '1px solid rgba(139, 92, 246, 0.35)' }}>
+        <div className="section-head" style={{ marginBottom: '8px' }}>
+          <span className="badge positive">⭐ AI Opportunity Spotlight · Score: {topExplanation.score}/100</span>
+          <span className="badge">Grounded by Gemini & ML Scoring Engine</span>
+        </div>
+        <h3 style={{ margin: '0 0 6px 0', fontSize: '1.15rem' }}>{topExplanation.headline || topExplanation.productName}</h3>
+        <p style={{ margin: '0 0 10px 0', fontSize: '0.92rem', color: 'var(--text-secondary, #cbd5e1)' }}>{topExplanation.explanation}</p>
+        {Array.isArray(topExplanation.keyStrengths) && topExplanation.keyStrengths.length > 0 && (
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+            {topExplanation.keyStrengths.map((strength, i) => (
+              <span key={i} className="badge" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>✓ {strength}</span>
+            ))}
+          </div>
+        )}
+        {topExplanation.actionTip && (
+          <div style={{ fontSize: '0.85rem', color: '#a78bfa' }}>
+            <b>Recommended Action:</b> {topExplanation.actionTip}
+          </div>
+        )}
+      </div>
+    )}
     {!sampleMode && error && <div className="insight" role="alert"><div><b>Catalogue unavailable</b><p>{error}</p>
       <div className="button-row"><button className="secondary" onClick={() => setRetry(value => value + 1)}>Retry backend</button>
         <button className="secondary" onClick={() => { setError(''); setUsingSamples(true); }}>Use local sample catalogue</button></div>
     </div></div>}
-    {loading && <p className="planner-status" role="status">Loading products from the backend…</p>}
-    <div className="results-line"><span>{list.length} products to explore</span><span>{sampleMode ? 'Local sample data' : 'Backend catalogue'}</span></div>
+    {(loading || semanticLoading || opportunityLoading) && <p className="planner-status" role="status">
+      {opportunityLoading ? 'Evaluating multi-criteria opportunity scores & generating strategic advice…' : semanticLoading ? 'Computing sentence embeddings with Hugging Face…' : 'Loading products from the backend…'}
+    </p>}
+    <div className="results-line">
+      <span>{list.length} products to explore</span>
+      <span>{sort === 'opportunity' ? 'Ranked by Multi-Criteria Opportunity Engine (Margin 35%, Demand 30%, Supplier 25%, Shipping 10%)' : semanticMode ? 'Ranked by MiniLM semantic similarity' : sampleMode ? 'Local sample data' : 'Backend catalogue'}</span>
+    </div>
     <div className="product-grid">{list.map(product => <article key={product.id} className="panel product-card">
       <ProductArt product={product} /><div className="product-content">
-        <div className="section-head"><span className="badge">{product.sourceLabel?.replaceAll('_', ' ') || product.trend}</span>
-          <strong className="positive-text">{product.score}<small>/100</small></strong></div>
-        <h2>{product.name}</h2><p>{product.category} · {product.trend}</p>
+        <div className="section-head">
+          <span className={`badge ${product.opportunityScore != null || product.similarityScore != null ? 'positive' : ''}`}>
+            {product.opportunityScore != null ? `⭐ ${product.opportunityScore}/100 Opportunity` : product.similarityScore != null ? `⚡ ${product.similarityScore}% Match` : (product.sourceLabel?.replaceAll('_', ' ') || product.trend)}
+          </span>
+          <strong className="positive-text">
+            {product.opportunityScore != null ? `${product.opportunityScore}` : product.similarityScore != null ? `${product.similarityScore}%` : `${product.score}`}
+            <small>{product.opportunityScore != null ? ' opp' : product.similarityScore != null ? ' match' : '/100'}</small>
+          </strong>
+        </div>
+        <h2>{product.name}</h2><p>{product.category} · {product.trend || 'Trending'}</p>
         <div className="product-prices"><span>Estimated cost<b>{money(product.cost)}</b></span><span>Suggested retail<b>{money(product.price)}</b></span></div>
+        {product.scoreBreakdown && (
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #94a3b8)', marginTop: '6px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+            <span>Margin: {product.scoreBreakdown.marginContribution}/35</span>
+            <span>Demand: {product.scoreBreakdown.demandContribution}/30</span>
+            <span>Supplier: {product.scoreBreakdown.supplierContribution}/25</span>
+          </div>
+        )}
         <button className="secondary full" onClick={() => onSelect(product)}>Explore product <Icon name="arrow" size={17} /></button>
       </div>
     </article>)}</div>
-    {!loading && !error && !list.length && <div className="panel empty-state"><Icon name="search" size={38} /><h2>No matches yet</h2>
+    {!loading && !semanticLoading && !error && !list.length && <div className="panel empty-state"><Icon name="search" size={38} /><h2>No matches yet</h2>
       <p>Try a broader search or a different category.</p>
-      <button className="secondary" onClick={() => { setQuery(''); setCategory('All products'); }}>Reset filters</button>
+      <button className="secondary" onClick={() => { setQuery(''); setCategory('All products'); setSemanticItems(null); }}>Reset filters</button>
     </div>}
     {sampleMode && !demoMode && <button className="text-button" onClick={() => setUsingSamples(false)}>Return to backend catalogue</button>}
   </>;
+}
+
+export function ProductSentimentInspector({ productId, productName }) {
+  const [sentiment, setSentiment] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const analyze = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await productService.getSentiment(productId);
+      if (res.data) {
+        setSentiment(res.data);
+      }
+    } catch (err) {
+      setError(err.message || 'Sentiment service currently unavailable.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="sentiment-inspector" style={{ marginTop: '16px', padding: '14px', borderRadius: '10px', background: 'var(--panel-hover, rgba(255,255,255,0.03))', border: '1px solid var(--border, rgba(255,255,255,0.08))' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <strong style={{ fontSize: '0.88rem', color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Icon name="spark" size={15} /> Customer Feedback Sentiment (RoBERTa AI)
+        </strong>
+        {!sentiment && (
+          <button type="button" className="secondary" disabled={loading} style={{ fontSize: '0.78rem', padding: '5px 10px' }} onClick={analyze}>
+            {loading ? 'Analyzing with RoBERTa…' : 'Inspect Reviews'}
+          </button>
+        )}
+      </div>
+
+      {error && <p className="form-error" style={{ marginTop: '8px' }}>{error}</p>}
+
+      {sentiment && !sentiment.sentimentAvailable && (
+        <p style={{ marginTop: '8px', fontSize: '0.82rem', color: 'var(--muted, #94a3b8)' }}>
+          ℹ️ {sentiment.message}
+        </p>
+      )}
+
+      {sentiment && sentiment.sentimentAvailable && (
+        <div style={{ marginTop: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span className={`badge ${sentiment.overallLabel === 'POSITIVE' ? 'positive' : sentiment.overallLabel === 'NEGATIVE' ? 'negative' : 'warning'}`}>
+              {sentiment.overallLabel}: {sentiment.sentimentScore}% Positive
+            </span>
+            <small style={{ color: 'var(--muted, #94a3b8)' }}>
+              {sentiment.analyzedReviewsCount} verified reviews analyzed
+            </small>
+          </div>
+          <div style={{ height: '6px', width: '100%', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden', display: 'flex', margin: '8px 0' }}>
+            <div style={{ width: `${sentiment.positivePercent}%`, background: '#10b981' }} title={`Positive: ${sentiment.positivePercent}%`} />
+            <div style={{ width: `${sentiment.neutralPercent}%`, background: '#94a3b8' }} title={`Neutral: ${sentiment.neutralPercent}%`} />
+            <div style={{ width: `${sentiment.negativePercent}%`, background: '#ef4444' }} title={`Negative: ${sentiment.negativePercent}%`} />
+          </div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--muted, #cbd5e1)', marginTop: '4px' }}>
+            {sentiment.summary?.replace(/\s*\(lexicon analyzed\)\.?/i, '.') || `${sentiment.sentimentScore}% positive sentiment across ${sentiment.analyzedReviewsCount} verified customer reviews.`}
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+            <span className="badge" style={{ fontSize: '0.72rem', background: 'rgba(167, 139, 250, 0.15)', color: '#c084fc' }}>
+              ✦ RoBERTa Sentiment AI · CardiffNLP
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 export function SupplierComparison({
   product,
@@ -186,32 +410,78 @@ export function ListingStudio({
   notify,
   user
 }) {
-  const [features, setFeatures] = useState(product.features),
-    [audience, setAudience] = useState('Everyday shoppers'),
-    [channel, setChannel] = useState('Instagram'),
-    [draft, setDraft] = useStored(`droppilot_draft_${user.email}_${product.id}_${content ? 'social' : 'listing'}`, null),
-    [busy, setBusy] = useState(false),
-    [preview, setPreview] = useState(false);
-  const [source, setSource] = useState(user.sessionMode === 'api' && !content ? 'api' : 'local');
+  const [productTitle, setProductTitle] = useState(product?.name || 'Electric Cooker');
+  const [features, setFeatures] = useState(product?.features || '');
+  const [audience, setAudience] = useState('Everyday shoppers');
+  const [channel, setChannel] = useState('Instagram');
+  const [draft, setDraft] = useStored(`droppilot_draft_${user.email}_${product.id}_${content ? 'social' : 'listing'}`, null);
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const [source, setSource] = useState(user?.sessionMode === 'api' ? 'api' : 'local');
+
   const generate = async () => {
     setBusy(true);
     try {
       if (source === 'api') {
-        const res = await listingService.generateListing({
-          productTitle: product.name,
-          productFeatures: features.split('\n'),
-          targetAudience: audience
-        });
-        if (!res.data?.description) throw new Error('The service did not return a listing.');
-        setDraft({
-          title: res.data.title || product.name,
-          description: res.data.description
-        });
+        if (content) {
+          const res = await listingService.generateMarketing({
+            productTitle: productTitle.trim() || product.name,
+            sellingPoints: features.split('\n').filter(Boolean),
+            targetAudience: audience,
+            channel: channel.toLowerCase(),
+          });
+          const d = res.data || {};
+          let text = '';
+          if (channel === 'TikTok') {
+            const hook = d.tiktokHook || d.tiktok?.hook || d.hook || '3-Second Viral Hook';
+            const script = d.adScript || d.tiktok?.script || d.script || '';
+            text = `🔥 Hook (0-3s):\n${hook}\n\n🎬 Script:\n${script}`;
+          } else if (channel === 'Instagram') {
+            const caption = d.instagramCaption || d.instagram?.caption || d.caption || '';
+            const tags = (d.instagram?.hashtags || d.hashtags || []).join(' ');
+            text = tags ? `${caption}\n\n${tags}` : caption;
+          } else if (channel === 'Facebook Ads') {
+            const headline = d.facebook?.headline || d.headline || `${productTitle} - Limited Time Offer`;
+            const primaryText = d.adScript || d.facebook?.primaryText || d.primaryText || d.instagramCaption || '';
+            text = `📢 Headline: ${headline}\n\n📝 Primary Text & Ad Script:\n${primaryText}`;
+          } else {
+            const metaTitle = d.shopifySeo?.metaTitle || d.seoTitle || productTitle;
+            const metaDescription = d.shopifySeo?.metaDescription || d.metaDescription || '';
+            const keywords = (d.shopifySeo?.keywords || d.keywords || []).join(', ');
+            text = `Meta Title: ${metaTitle}\n\nMeta Description:\n${metaDescription}\n\nKeywords: ${keywords}`;
+          }
+
+          if (!text.trim()) {
+            text = d.adScript || d.instagramCaption || d.tiktokHook || 'Generated marketing copy ready for review.';
+          }
+
+          setDraft({
+            title: `${channel}: ${productTitle}`,
+            description: text
+          });
+        } else {
+          const res = await listingService.generateListing({
+            productTitle: productTitle.trim() || product.name,
+            features: features.split('\n').filter(Boolean),
+            targetAudience: audience
+          });
+          if (!res.data?.description) throw new Error('The service did not return a listing.');
+          setDraft({
+            title: res.data.title || productTitle,
+            description: res.data.description,
+            seoTitle: res.data.seoTitle || res.data.title || productTitle,
+            seoDescription: res.data.seoDescription || res.data.description?.slice(0, 155) || '',
+            keywords: Array.isArray(res.data.keywords) ? res.data.keywords.join(', ') : (res.data.keywords || '')
+          });
+        }
       } else {
         const facts = features.split('\n').map(s => s.trim()).filter(Boolean);
         setDraft({
-          title: content ? `${channel}: ${product.name}` : product.name,
-          description: content ? `${channel === 'TikTok' ? 'Meet your next everyday essential.' : channel === 'Instagram' ? 'A little upgrade to your everyday.' : 'Discover ' + product.name + '.'}\n\n${product.name} for ${audience.toLowerCase()}.\n${facts.map(s => '• ' + s).join('\n')}\n\n${channel === 'Instagram' ? '#EverydayEssentials #SmartShopping' : 'Explore the details and find your fit.'}` : `Meet ${product.name}, designed for ${audience.toLowerCase()}.\n\n${facts.map(s => '• ' + s).join('\n')}\n\nExplore the features and choose what works for you.`
+          title: content ? `${channel}: ${productTitle}` : productTitle,
+          description: content ? `${channel === 'TikTok' ? 'Meet your next everyday essential.' : channel === 'Instagram' ? 'A little upgrade to your everyday.' : 'Discover ' + productTitle + '.'}\n\n${productTitle} for ${audience.toLowerCase()}.\n${facts.map(s => '• ' + s).join('\n')}\n\n${channel === 'Instagram' ? '#EverydayEssentials #SmartShopping' : 'Explore the details and find your fit.'}` : `Meet ${productTitle}, designed for ${audience.toLowerCase()}.\n\n${facts.map(s => '• ' + s).join('\n')}\n\nExplore the features and choose what works for you.`,
+          seoTitle: productTitle,
+          seoDescription: `Discover ${productTitle}. High quality, fast shipping, and great value for ${audience.toLowerCase()}.`,
+          keywords: `${productTitle.toLowerCase()}, trending, best deals, online shopping`
         });
       }
       setPreview(false);
@@ -222,21 +492,41 @@ export function ListingStudio({
       setBusy(false);
     }
   };
-  return <><PageHead eyebrow={content ? 'One product. Many possibilities.' : 'From product to possibility'} title={content ? 'Make every channel your own.' : 'A listing worth stopping for.'} description={content ? 'Create channel-specific copy from the product facts you provide.' : 'Turn verified product details into a clear, editable listing.'} /><div className="workspace-grid"><section className="panel"><div className="product-inline"><ProductArt product={product} small /><div><h2>{product.name}</h2><p>{product.category}</p></div></div><label className="form-field"><span>Product facts, one per line</span><textarea rows="6" value={features} onChange={e => setFeatures(e.target.value)} /></label><Field label="Target audience" value={audience} onChange={e => setAudience(e.target.value)} />{content ? <label className="form-field"><span>Channel</span><select value={channel} onChange={e => setChannel(e.target.value)}>{['Instagram', 'TikTok', 'Facebook Ads', 'Shopify SEO'].map(c => <option key={c}>{c}</option>)}</select></label> : <label className="form-field"><span>Draft source</span><select value={source} onChange={e => setSource(e.target.value)}><option value="local">Local template</option><option value="api">Existing listing API</option></select></label>}<button className="primary full" disabled={busy || !features.trim() || !audience.trim()} onClick={generate}><Icon name="spark" />{busy ? 'Creating…' : content ? 'Create channel copy' : 'Generate listing'}</button><p className="footnote">{source === 'local' ? 'Built from your facts using a local template.' : 'Uses the existing backend listing service.'}</p></section><section className="panel"><div className="section-head"><h2>{preview ? 'Listing preview' : 'Your creative canvas'}</h2>{draft && <span className="badge positive">Saved on this device</span>}</div>{draft ? <><div className="segmented draft-tabs"><button className={!preview ? 'selected' : ''} onClick={() => setPreview(false)}>Edit draft</button><button className={preview ? 'selected' : ''} onClick={() => setPreview(true)}>Preview</button></div>{preview ? <article className="draft-preview"><h2>{draft.title}</h2><p>{draft.description}</p></article> : <><Field label="Title" value={draft.title} onChange={e => setDraft({
+  return <><PageHead eyebrow={content ? 'One product. Many possibilities.' : 'From product to possibility'} title={content ? 'Make every channel your own.' : 'A listing worth stopping for.'} description={content ? 'Create channel-specific copy from the product facts you provide.' : 'Turn verified product details into a clear, editable listing.'} /><div className="workspace-grid"><section className="panel"><Field label="Product Name / Title" value={productTitle} onChange={e => setProductTitle(e.target.value)} /><label className="form-field"><span>Product facts, one per line</span><textarea rows="6" value={features} onChange={e => setFeatures(e.target.value)} /></label><Field label="Target audience" value={audience} onChange={e => setAudience(e.target.value)} />{content && <label className="form-field"><span>Channel</span><select value={channel} onChange={e => setChannel(e.target.value)}>{['Instagram', 'TikTok', 'Facebook Ads', 'Shopify SEO'].map(c => <option key={c}>{c}</option>)}</select></label>}<label className="form-field"><span>Generation Engine</span><select value={source} onChange={e => setSource(e.target.value)}><option value="api">Google Gemini AI Model</option><option value="local">Fast Local Template</option></select></label><button className="primary full" disabled={busy || !features.trim() || !audience.trim()} onClick={generate}><Icon name="spark" />{busy ? 'Generating with AI…' : content ? 'Create channel copy' : 'Generate listing'}</button><p className="footnote">{source === 'local' ? 'Built from your facts using a local template.' : 'Powered by Google Gemini API & server generation.'}</p></section><section className="panel"><div className="section-head"><h2>{preview ? 'Listing preview' : 'Your creative canvas'}</h2>{draft && <span className="badge positive">Saved on this device</span>}</div>{draft ? <><div className="segmented draft-tabs"><button className={!preview ? 'selected' : ''} onClick={() => setPreview(false)}>Edit draft</button><button className={preview ? 'selected' : ''} onClick={() => setPreview(true)}>Preview</button></div>{preview ? <article className="draft-preview"><h2>{draft.title}</h2><p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{draft.description}</p>{draft.seoTitle && <div className="preview-seo" style={{ marginTop: '18px', padding: '14px', background: 'var(--panel-hover, rgba(255,255,255,0.04))', borderRadius: '10px', borderLeft: '3px solid #8b5cf6' }}><h4 style={{ fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#a78bfa', marginBottom: '6px' }}>Google & Shopify SEO Preview</h4><strong style={{ fontSize: '1.05rem', color: '#60a5fa' }}>{draft.seoTitle}</strong><p style={{ fontSize: '0.88rem', color: 'var(--muted, #94a3b8)', marginTop: '4px' }}>{draft.seoDescription}</p>{draft.keywords && <small style={{ color: '#818cf8', display: 'block', marginTop: '6px' }}>🔑 Keywords: {draft.keywords}</small>}</div>}</article> : <><Field label="Title" value={draft.title} onChange={e => setDraft({
               ...draft,
               title: e.target.value
-            })} /><label className="form-field"><span>Description</span><textarea rows="10" value={draft.description} onChange={e => setDraft({
+            })} /><label className="form-field"><span>Description</span><textarea rows="8" value={draft.description} onChange={e => setDraft({
                 ...draft,
                 description: e.target.value
-              })} /></label></>}<div className="button-row"><button className="secondary" onClick={async () => {
+              })} /></label><div className="seo-edit-section" style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border, rgba(255,255,255,0.08))' }}><h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--accent, #a78bfa)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}><Icon name="spark" size={16} /> SEO Search Optimization</h3><Field label="SEO Meta Title (Under 60 chars)" value={draft.seoTitle || ''} onChange={e => setDraft({ ...draft, seoTitle: e.target.value })} /><label className="form-field"><span>SEO Meta Description (Under 155 chars)</span><textarea rows="3" value={draft.seoDescription || ''} onChange={e => setDraft({ ...draft, seoDescription: e.target.value })} /></label><Field label="Target Keywords (comma-separated)" value={draft.keywords || ''} onChange={e => setDraft({ ...draft, keywords: e.target.value })} /></div></>}<div className="button-row"><button className="secondary" onClick={async () => {
               try {
-                await navigator.clipboard.writeText(`${draft.title}\n\n${draft.description}`);
-                notify('Draft copied.');
+                const fullText = `${draft.title}\n\n${draft.description}${draft.seoTitle ? `\n\n--- SEO METADATA ---\nSEO Title: ${draft.seoTitle}\nSEO Description: ${draft.seoDescription || ''}\nKeywords: ${draft.keywords || ''}` : ''}`;
+                await navigator.clipboard.writeText(fullText);
+                notify('Draft and SEO metadata copied.');
               } catch {
                 notify('Clipboard unavailable. Select and copy the draft text.');
               }
-            }}>Copy text</button><button className="primary" onClick={() => {
-              const blob = new Blob([`${draft.title}\n\n${draft.description}`], {
+            }}>Copy text</button><button className="secondary" disabled={busy} onClick={async () => {
+              try {
+                setBusy(true);
+                await listingService.saveListing({
+                  productId: product?.id || product?._id,
+                  title: draft.title,
+                  description: draft.description,
+                  seoTitle: draft.seoTitle,
+                  seoDescription: draft.seoDescription,
+                  keywords: draft.keywords ? (typeof draft.keywords === 'string' ? draft.keywords.split(',').map(s => s.trim()) : draft.keywords) : [],
+                  status: 'PUBLISHED'
+                });
+                notify('✦ Listing saved directly into MongoDB Atlas!');
+              } catch (err) {
+                notify(err.message || 'Could not save listing to database.');
+              } finally {
+                setBusy(false);
+              }
+            }}>Save to Database</button><button className="primary" onClick={() => {
+              const fullText = `${draft.title}\n\n${draft.description}${draft.seoTitle ? `\n\n--- SEO METADATA ---\nSEO Title: ${draft.seoTitle}\nSEO Description: ${draft.seoDescription || ''}\nKeywords: ${draft.keywords || ''}` : ''}`;
+              const blob = new Blob([fullText], {
                 type: 'text/plain'
               });
               const url = URL.createObjectURL(blob);
@@ -245,7 +535,7 @@ export function ListingStudio({
               a.download = `${product.id}-draft.txt`;
               a.click();
               setTimeout(() => URL.revokeObjectURL(url), 1000);
-              notify('Draft exported.');
+              notify('Draft exported with SEO metadata.');
             }}>Export draft <Icon name="arrow" size={17} /></button></div></> : <div className="empty-state"><span className="orb"><Icon name="file" size={34} /></span><h2>Good stories start with facts.</h2><p>Add your product details, then create your first draft.</p></div>}</section></div></>;
 }
 export function Goals({
@@ -254,8 +544,12 @@ export function Goals({
   recovery = false,
   onNavigate
 }) {
-  const [perOrder, setPerOrder] = useState(539),
-    [show, setShow] = useState(false);
+  const [perOrder, setPerOrder] = useState(539);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiAdvice, setAiAdvice] = useState(null);
+  const [aiError, setAiError] = useState('');
+  const [userQuery, setUserQuery] = useState('Why am I behind my monthly profit target and what tactical actions should I take?');
+
   const {
     remaining,
     days,
@@ -263,7 +557,116 @@ export function Goals({
     orders,
     dailyOrders
   } = calculateGoal(target, 42618, perOrder);
-  return <><PageHead eyebrow={recovery ? 'Your next best move' : 'A little ambition. A clear plan.'} title={recovery ? 'Get back on your growth path.' : 'Give your growth a destination.'} description="Plan against the sample profit of ₹42,618. Your target is saved on this device." action={<button className="primary" onClick={onEdit}>Adjust target <Icon name="target" /></button>} /><div className="workspace-grid goal-workspace"><GoalRing target={target} onEdit={onEdit} /><section className="panel"><h2>{recovery ? 'Build your recovery plan' : 'Make the numbers work for you'}</h2><p>{days} days remaining this month, including today.</p><div className="mini-stats"><div><span>Remaining profit</span><strong>{money(remaining)}</strong></div><div><span>Daily profit needed</span><strong>{money(dailyProfit)}</strong></div></div><Field label="Estimated profit per order (₹)" type="number" min="1" value={perOrder} onChange={e => setPerOrder(Math.max(1, Number(e.target.value)))} /><div className="insight"><Icon name="target" /><p>At {money(perOrder)} profit per order, aim for <b>{orders} additional orders</b> this month — approximately <b>{dailyOrders} per day</b>.</p></div>{recovery ? <><button className="primary" onClick={() => setShow(true)}>Build action plan <Icon name="spark" /></button>{show && <ol className="recovery-steps"><li>Prioritize products with at least {money(perOrder)} profit per order.</li><li>Compare shipping and unit costs to protect your margin.</li><li>Review progress daily against {money(dailyProfit)} in profit.</li></ol>}</> : <button className="secondary" onClick={() => onNavigate('recovery')}>Explore a recovery plan <Icon name="arrow" /></button>}</section></div></>;
+
+  const fetchAiRecovery = async () => {
+    setAiLoading(true);
+    setAiError('');
+    try {
+      const res = await goalService.getRecoveryAdvice('active', {
+        question: userQuery,
+        target,
+        goalMetrics: {
+          target,
+          currentNetProfit: 42618,
+          remainingProfit: remaining,
+          progressPercent: target > 0 ? Number(((42618 / target) * 100).toFixed(1)) : 0
+        }
+      });
+      if (res.data) {
+        setAiAdvice(res.data);
+      } else {
+        throw new Error('No advice returned from AI recovery engine.');
+      }
+    } catch (err) {
+      setAiError(err.message || 'AI Recovery Engine currently unavailable.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  return <><PageHead eyebrow={recovery ? 'Your next best move' : 'A little ambition. A clear plan.'} title={recovery ? 'Get back on your growth path.' : 'Give your growth a destination.'} description="Plan against the sample profit of ₹42,618. Your target is saved on this device." action={<button className="primary" onClick={onEdit}>Adjust target <Icon name="target" /></button>} /><div className="workspace-grid goal-workspace"><GoalRing target={target} onEdit={onEdit} /><section className="panel"><h2>{recovery ? 'Build your recovery plan' : 'Make the numbers work for you'}</h2><p>{days} days remaining this month, including today.</p><div className="mini-stats"><div><span>Remaining profit</span><strong>{money(remaining)}</strong></div><div><span>Daily profit needed</span><strong>{money(dailyProfit)}</strong></div></div><Field label="Estimated profit per order (₹)" type="number" min="1" value={perOrder} onChange={e => setPerOrder(Math.max(1, Number(e.target.value)))} /><div className="insight"><Icon name="target" /><p>At {money(perOrder)} profit per order, aim for <b>{orders} additional orders</b> this month — approximately <b>{dailyOrders} per day</b>.</p></div>{recovery ? <div className="recovery-advisor" style={{ marginTop: '20px' }}>
+    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+      <input
+        className="form-input"
+        style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', background: 'var(--panel-hover, rgba(255,255,255,0.05))', border: '1px solid var(--border, rgba(255,255,255,0.1))', color: 'inherit' }}
+        value={userQuery}
+        onChange={e => setUserQuery(e.target.value)}
+        placeholder="Ask Gemini recovery question..."
+      />
+      <button className="primary" disabled={aiLoading || !userQuery.trim()} onClick={fetchAiRecovery}>
+        <Icon name="spark" /> {aiLoading ? 'Analyzing with Gemini…' : 'Get Gemini Diagnosis'}
+      </button>
+    </div>
+
+    {aiError && <p className="form-error" role="alert">{aiError}</p>}
+
+    {aiAdvice && (
+      <div className="ai-advice-card" style={{ marginTop: '16px', padding: '16px', background: 'var(--panel-hover, rgba(255,255,255,0.03))', borderRadius: '12px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <strong style={{ color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Icon name="spark" size={16} /> Gemini Strategic Diagnosis
+          </strong>
+          {aiAdvice.source && (
+            <span className="badge" style={{ fontSize: '0.75rem' }}>
+              {aiAdvice.isFallback ? 'Deterministic benchmark' : 'Live Gemini 3.5'}
+            </span>
+          )}
+        </div>
+        
+        <p style={{ lineHeight: '1.6', marginBottom: '14px' }}>{aiAdvice.answer}</p>
+
+        {aiAdvice.possibleReasons && aiAdvice.possibleReasons.length > 0 && (
+          <div style={{ marginBottom: '14px' }}>
+            <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--muted, #94a3b8)', marginBottom: '6px' }}>Root Causes Identified</h4>
+            <ul style={{ paddingLeft: '20px', lineHeight: '1.5' }}>
+              {aiAdvice.possibleReasons.map((r, i) => (
+                <li key={i} style={{ marginBottom: '4px' }}>
+                  <b>{r.reason}:</b> <span style={{ color: 'var(--muted, #cbd5e1)' }}>{r.evidence}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {aiAdvice.suggestedActions && aiAdvice.suggestedActions.length > 0 && (
+          <div style={{ marginBottom: '14px' }}>
+            <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--muted, #94a3b8)', marginBottom: '8px' }}>Action Plan</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {aiAdvice.suggestedActions.map((a, i) => (
+                <div key={i} style={{ padding: '10px 12px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', borderLeft: '3px solid #10b981' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <strong>{a.action}</strong>
+                    {a.confidence && (
+                      <span className="badge positive" style={{ fontSize: '0.7rem' }}>
+                        {a.confidence} confidence
+                      </span>
+                    )}
+                  </div>
+                  {a.expectedImpact && <p style={{ fontSize: '0.85rem', color: 'var(--muted, #94a3b8)', marginTop: '4px' }}>Impact: {a.expectedImpact}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {aiAdvice.limitations && aiAdvice.limitations.length > 0 && (
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '10px' }}>
+            <small style={{ color: 'var(--muted, #64748b)' }}>
+              Limitations: {aiAdvice.limitations.join(' • ')}
+            </small>
+          </div>
+        )}
+      </div>
+    )}
+
+    {!aiAdvice && !aiLoading && (
+      <ol className="recovery-steps" style={{ marginTop: '14px' }}>
+        <li>Prioritize products with at least {money(perOrder)} profit per order.</li>
+        <li>Compare shipping and unit costs to protect your margin.</li>
+        <li>Review progress daily against {money(dailyProfit)} in profit.</li>
+      </ol>
+    )}
+  </div> : <button className="secondary" onClick={() => onNavigate('recovery')}>Explore a recovery plan <Icon name="arrow" /></button>}</section></div></>;
 }
 export function Shopify({
   notify

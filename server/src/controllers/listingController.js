@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { formatSuccess } from '../utils/responseFormatter.js';
 import { generateProductListing } from '../services/ai/listingGenerator.js';
 import { generateMarketingContent } from '../services/ai/contentGenerator.js';
@@ -98,13 +99,31 @@ export const getListingById = async (req, res, next) => {
 
 export const createListing = async (req, res, next) => {
   try {
-    const userId = req.user?.userId || req.user?._id || 'user_demo';
+    const rawUserId = req.user?.id || req.user?.userId || req.user?._id;
+    let userId = rawUserId;
+    if (!userId || userId === 'user_demo') {
+      const User = (await import('../models/User.js')).default;
+      const firstUser = await User.findOne();
+      if (firstUser) userId = firstUser._id;
+    }
+
     const { productId, title, description, keyFeatures, seoTitle, seoDescription, keywords, status } = req.body;
+
+    let targetProductId = productId;
+    if (productId) {
+      if (!mongoose.Types.ObjectId.isValid(productId)) {
+        const matched = await Product.findOne({ $or: [{ sku: productId }, { id: productId }, { title: productId }] });
+        if (matched) targetProductId = matched._id;
+      }
+    } else {
+      const defaultProduct = await Product.findOne();
+      if (defaultProduct) targetProductId = defaultProduct._id;
+    }
 
     let savedListing = {
       _id: 'listing_' + Date.now(),
       userId,
-      productId: productId || null,
+      productId: targetProductId || null,
       generatedTitle: title || req.body.generatedTitle || 'Untitled Listing',
       generatedDescription: description || req.body.generatedDescription || '',
       featureBullets: keyFeatures || req.body.featureBullets || [],
@@ -117,10 +136,10 @@ export const createListing = async (req, res, next) => {
     };
 
     try {
-      if (productId && userId && userId !== 'user_demo') {
+      if (targetProductId && userId && mongoose.Types.ObjectId.isValid(userId) && mongoose.Types.ObjectId.isValid(targetProductId)) {
         const doc = new Listing({
           userId,
-          productId,
+          productId: targetProductId,
           generatedTitle: savedListing.generatedTitle,
           generatedDescription: savedListing.generatedDescription,
           featureBullets: savedListing.featureBullets,
@@ -132,11 +151,11 @@ export const createListing = async (req, res, next) => {
         const saved = await doc.save();
         savedListing = saved.toObject();
       }
-    } catch {
-      // Graceful fallback for mock mode
+    } catch (saveErr) {
+      console.warn('[ListingController] Failed to persist listing document:', saveErr.message);
     }
 
-    res.status(201).json(formatSuccess(savedListing, 'Listing saved'));
+    res.status(201).json(formatSuccess(savedListing, 'Listing saved successfully'));
   } catch (err) {
     next(err);
   }

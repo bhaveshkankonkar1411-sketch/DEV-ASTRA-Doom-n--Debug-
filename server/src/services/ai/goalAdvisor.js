@@ -21,20 +21,25 @@ export const generateRecoveryAdvice = async ({
   const remainingProfit = goalMetrics.remainingProfit != null ? goalMetrics.remainingProfit : Math.max(0, target - currentNetProfit);
   const progressPercent = goalMetrics.progressPercent != null ? goalMetrics.progressPercent : (target > 0 ? (currentNetProfit / target) * 100 : 0);
 
+  const toRupees = (val) => {
+    const n = Number(val) || 0;
+    return n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  };
+
   const prompt = `
 You are a strategic dropshipping financial analyst. Analyze these pre-calculated business figures and answer the user's question.
 IMPORTANT: You MUST NOT recalculate financial figures or invent numbers. Base your reasoning entirely on the figures below. If data is missing (such as ad breakdown or supplier costs), explicitly state that limitation.
 
 Verified Store Financials:
-- Monthly Target: ₹${(target / 100).toFixed(2)}
-- Current Net Profit: ₹${(currentNetProfit / 100).toFixed(2)}
-- Remaining Amount: ₹${(remainingProfit / 100).toFixed(2)}
+- Monthly Target: ₹${toRupees(target)}
+- Current Net Profit: ₹${toRupees(currentNetProfit)}
+- Remaining Amount: ₹${toRupees(remainingProfit)}
 - Progress: ${progressPercent.toFixed(1)}%
-- Total Revenue: ₹${((financials.revenue || 0) / 100).toFixed(2)}
-- Supplier Costs: ₹${((financials.supplierCosts || 0) / 100).toFixed(2)}
-- Ad Spend: ₹${((financials.advertisingCosts || 0) / 100).toFixed(2)}
-- Shipping Costs: ₹${((financials.shippingCosts || 0) / 100).toFixed(2)}
-- Other Expenses: ₹${((financials.otherExpenses || 0) / 100).toFixed(2)}
+- Total Revenue: ₹${toRupees(financials.revenue || 0)}
+- Supplier Costs: ₹${toRupees(financials.supplierCosts || 0)}
+- Ad Spend: ₹${toRupees(financials.advertisingCosts || 0)}
+- Shipping Costs: ₹${toRupees(financials.shippingCosts || 0)}
+- Other Expenses: ₹${toRupees(financials.otherExpenses || 0)}
 - Product Summary: ${JSON.stringify(productPerformance.slice(0, 5))}
 - Data Source: ${dataSource}
 
@@ -66,7 +71,7 @@ Respond with pure JSON conforming to this schema:
 
   const fallbackGenerator = () => ({
     answer: progressPercent < 100
-      ? `You are currently at ${progressPercent.toFixed(1)}% of your monthly net profit target with ₹${(remainingProfit / 100).toFixed(2)} remaining. Primary cost allocations indicate supplier and advertising expenses are compressing margins.`
+      ? `You are currently at ${progressPercent.toFixed(1)}% of your monthly net profit target with ₹${toRupees(remainingProfit)} remaining. Primary cost allocations indicate supplier and advertising expenses are compressing margins.`
       : `Congratulations! You have reached ${progressPercent.toFixed(1)}% of your monthly profit goal.`,
     possibleReasons: [
       {
@@ -75,7 +80,7 @@ Respond with pure JSON conforming to this schema:
       },
       {
         reason: 'Supplier cost allocation',
-        evidence: `Supplier costs represent ₹${((financials.supplierCosts || 0) / 100).toFixed(2)} of operating spend.`,
+        evidence: `Supplier costs represent ₹${toRupees(financials.supplierCosts || 0)} of operating spend.`,
       },
     ],
     suggestedActions: [

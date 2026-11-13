@@ -68,6 +68,17 @@ Return pure JSON matching this exact structure:
 
   return {
     ...result.data,
+    facebook: {
+      headline: `${effectiveTitle} - Trending Must-Have`,
+      primaryText: result.data.adScript,
+    },
+    tiktok: {
+      hook: result.data.tiktokHook,
+      script: result.data.adScript,
+    },
+    instagram: {
+      caption: result.data.instagramCaption,
+    },
     productId,
     isFallback: result.isFallback,
     source: result.source,

@@ -9,7 +9,10 @@ const getOrdersForAnalytics = async (userId) => {
   if (isDbConnected) {
     const query = {};
     if (userId) query.userId = userId;
-    return await Order.find(query);
+    const dbOrders = await Order.find(query);
+    if (dbOrders && dbOrders.length > 0) {
+      return dbOrders;
+    }
   }
   return sampleOrderRecords.map((o) => ({
     productName: o.productName,

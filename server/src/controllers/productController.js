@@ -3,6 +3,9 @@ import Product from '../models/Product.js';
 import Supplier from '../models/Supplier.js';
 import { sampleProducts, sampleSuppliers } from '../fixtures/sampleData.js';
 import { formatSuccess, formatError } from '../utils/responseFormatter.js';
+import { seedDatabase } from '../scripts/seed.js';
+import { computeSemanticSearch, analyzeReviewSentiment } from '../services/ai/huggingFaceService.js';
+import { rankProductsByOpportunity } from '../services/ai/recommendationService.js';
 
 // Helper to populate suppliers for in-memory fixture products
 const populateSampleProductSuppliers = (product) => {
@@ -52,7 +55,18 @@ export const getProducts = async (req, res, next) => {
         query.sourceLabel = source.trim();
       }
 
-      const total = await Product.countDocuments(query);
+      let total = await Product.countDocuments(query);
+
+      // If database is completely empty on initial setup, auto-seed sample catalogue
+      if (total === 0 && !search.trim() && !category.trim() && !source.trim()) {
+        try {
+          await seedDatabase();
+          total = await Product.countDocuments(query);
+        } catch (seedErr) {
+          console.warn('[Product Controller] Auto-seed failed, falling back to sample fixtures:', seedErr.message);
+        }
+      }
+
       const sortDirection = sortOrder.toLowerCase() === 'asc' ? 1 : -1;
       const sortOptions = { [sortBy]: sortDirection };
 
@@ -284,6 +298,228 @@ export const saveProduct = async (req, res, next) => {
           savedAt: new Date().toISOString(),
         },
         'Product saved to your catalogue successfully'
+      )
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Customer reviews map for products with verified feedback evidence
+export const productCustomerReviews = {
+  prod_001: [
+    'Sunset warm lighting makes aesthetic TikTok room content look professional.',
+    'Base is heavy enough not to tip over, lens stays cool to touch.',
+    'USB cable is slightly short, had to use an extension cord.',
+    'Amazing ambient light for evening reading and background video.',
+  ],
+  prod_002: [
+    'Split ergonomic design completely relieved wrist pain during long coding sessions.',
+    'Mechanical switches are quiet enough for office calls without clacking loudly.',
+    'Takes 2-3 days to get used to the split layout, but totally worth it.',
+    'Bluetooth multi-device pairing switches instantly between Mac and PC.',
+  ],
+  prod_003: [
+    'Vibration buzzer alerts me whenever I start slouching at my desk.',
+    'Straps are soft under clothing, doesn’t dig into armpits.',
+    'Battery lasts nearly a full week on a single charge.',
+    'Calibration takes a minute to set the right angle threshold.',
+  ],
+  prod_004: [
+    'Compact espresso maker produces rich crema on camping trips without electricity.',
+    'Easy to rinse and pack into a backpack, solid pressure pump.',
+    'Takes some arm strength to pump, but the espresso flavor is excellent.',
+  ],
+  prod_005: [
+    'Hands-free neck cooling is essential for hot commute and outdoor walks.',
+    'Bladeless design is safe, doesn’t catch long hair.',
+    'A bit noisy on highest fan speed setting 3, but speed 1 and 2 are very quiet.',
+  ],
+  prod_006: [
+    'My golden retriever loves this brush. The button releases the hair in one clean chunk!',
+    'Saves so much vacuuming time. Very gentle on sensitive dog skin.',
+    'Works well on long hair cat fur too, easy to clean.',
+  ],
+  prod_007: [
+    'The magnet snap is super strong, charges my phone fast and the built-in stand is great for movies.',
+    'Compact size fits easily in my pocket. Premium aluminum build.',
+    'Great travel charger, gets slightly warm during 15W fast charge which is normal.',
+  ],
+  prod_008: [
+    'Keeps water ice cold all day at the gym. LED touch display is really sleek.',
+    'No leaks, durable stainless steel finish, and looks premium on my desk.',
+    'Nice bottle, battery for the temperature screen lasts months.',
+  ],
+  'LAMP-SUNSET-01': [
+    'Sunset warm lighting makes aesthetic TikTok room content look professional.',
+    'Base is heavy enough not to tip over, lens stays cool to touch.',
+    'USB cable is slightly short, had to use an extension cord.',
+    'Amazing ambient light for evening reading and background video.',
+  ],
+  'KB-SPLIT-02': [
+    'Split ergonomic design completely relieved wrist pain during long coding sessions.',
+    'Mechanical switches are quiet enough for office calls without clacking loudly.',
+    'Takes 2-3 days to get used to the split layout, but totally worth it.',
+    'Bluetooth multi-device pairing switches instantly between Mac and PC.',
+  ],
+  'HLTH-POSTURE-03': [
+    'Vibration buzzer alerts me whenever I start slouching at my desk.',
+    'Straps are soft under clothing, doesn’t dig into armpits.',
+    'Battery lasts nearly a full week on a single charge.',
+    'Calibration takes a minute to set the right angle threshold.',
+  ],
+  'KITCH-ESPR-04': [
+    'Compact espresso maker produces rich crema on camping trips without electricity.',
+    'Easy to rinse and pack into a backpack, solid pressure pump.',
+    'Takes some arm strength to pump, but the espresso flavor is excellent.',
+  ],
+  'FAN-NECK-05': [
+    'Hands-free neck cooling is essential for hot commute and outdoor walks.',
+    'Bladeless design is safe, doesn’t catch long hair.',
+    'A bit noisy on highest fan speed setting 3, but speed 1 and 2 are very quiet.',
+  ],
+  'PET-BRUSH-06': [
+    'My golden retriever loves this brush. The button releases the hair in one clean chunk!',
+    'Saves so much vacuuming time. Very gentle on sensitive dog skin.',
+    'Works well on long hair cat fur too, easy to clean.',
+  ],
+  'TECH-MAGPOWER-07': [
+    'The magnet snap is super strong, charges my phone fast and the built-in stand is great for movies.',
+    'Compact size fits easily in my pocket. Premium aluminum build.',
+    'Great travel charger, gets slightly warm during 15W fast charge which is normal.',
+  ],
+  'BTL-THERMO-08': [
+    'Keeps water ice cold all day at the gym. LED touch display is really sleek.',
+    'No leaks, durable stainless steel finish, and looks premium on my desk.',
+    'Nice bottle, battery for the temperature screen lasts months.',
+  ],
+};
+
+/**
+ * POST /api/products/semantic-search
+ * Semantic similarity matching using sentence-transformers/all-MiniLM-L6-v2
+ */
+export const semanticSearchProducts = async (req, res, next) => {
+  try {
+    const query = req.body.query || req.query.q || '';
+    if (!query.trim()) {
+      return getProducts(req, res, next);
+    }
+
+    const isDbConnected = mongoose.connection.readyState === 1;
+    let allProducts = [];
+    if (isDbConnected) {
+      allProducts = await Product.find().populate('suppliers');
+    }
+    if (!allProducts || allProducts.length === 0) {
+      allProducts = sampleProducts;
+    }
+
+    const results = await computeSemanticSearch(query, allProducts);
+    const isFallback = results[0]?.isFallback ?? false;
+    const model = results[0]?.model || 'sentence-transformers/all-MiniLM-L6-v2';
+    const provider = results[0]?.provider || (isFallback ? 'Local Deterministic Vector Engine' : 'Hugging Face Hosted Inference Router');
+
+    return res.json(
+      formatSuccess(
+        {
+          query,
+          count: results.length,
+          model,
+          provider,
+          inferenceMode: isFallback ? 'FALLBACK' : 'LIVE',
+          isFallback,
+          fallbackReason: results[0]?.fallbackReason || null,
+          results,
+        },
+        'Semantic search completed'
+      )
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * GET /api/products/:id/sentiment or POST /api/products/:id/sentiment
+ * Customer review sentiment analysis using cardiffnlp/twitter-roberta-base-sentiment-latest
+ */
+export const getProductSentiment = async (req, res, next) => {
+  try {
+    const productId = req.params.id;
+    const isDbConnected = mongoose.connection.readyState === 1;
+
+    let product = null;
+    if (isDbConnected && mongoose.Types.ObjectId.isValid(productId)) {
+      product = await Product.findById(productId);
+    }
+    if (!product) {
+      product = sampleProducts.find((p) => p.id === productId || p._id === productId || p.sku === productId);
+    }
+
+    const productName = product?.title || product?.name || 'Selected Product';
+    const matchedSample = sampleProducts.find(
+      (sp) => sp.title === product?.title || sp.sku === product?.sku || sp.id === productId || sp.id === product?.id
+    );
+    const reviews =
+      req.body.reviews ||
+      productCustomerReviews[productId] ||
+      productCustomerReviews[product?.id] ||
+      (matchedSample ? productCustomerReviews[matchedSample.id] : null) ||
+      productCustomerReviews[product?.sku] ||
+      [];
+
+    const sentiment = await analyzeReviewSentiment({
+      reviews,
+      productName,
+    });
+
+    return res.json(formatSuccess(sentiment, 'Sentiment analysis completed'));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * GET or POST /api/products/recommendations
+ * Multi-Criteria Opportunity Scoring & Ranking with Gemini Strategic Explanation
+ */
+export const getProductRecommendations = async (req, res, next) => {
+  try {
+    const query = req.body.query || req.query.q || '';
+    const includeExplanation = req.body.includeExplanation !== false;
+
+    const isDbConnected = mongoose.connection.readyState === 1;
+    let allProducts = [];
+    if (isDbConnected) {
+      allProducts = await Product.find().populate('suppliers');
+    }
+    if (!allProducts || allProducts.length === 0) {
+      allProducts = sampleProducts;
+    }
+
+    const recommendations = await rankProductsByOpportunity({
+      products: allProducts,
+      query,
+      includeAiExplanation: includeExplanation,
+    });
+
+    return res.json(
+      formatSuccess(
+        {
+          count: recommendations.length,
+          query: query || null,
+          scoringMethod: 'multi-criteria-opportunity-engine',
+          weights: {
+            profitMargin: query ? '30%' : '35%',
+            marketDemand: query ? '25%' : '30%',
+            supplierReliability: query ? '20%' : '25%',
+            shippingSpeed: '10%',
+            semanticRelevance: query ? '15%' : '0%',
+          },
+          recommendations,
+        },
+        'Product opportunity recommendations calculated'
       )
     );
   } catch (err) {

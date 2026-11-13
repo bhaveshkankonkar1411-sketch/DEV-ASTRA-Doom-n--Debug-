@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import User from '../models/User.js';
 import ProfitGoal from '../models/ProfitGoal.js';
 import Order from '../models/Order.js';
 import StoreDataImport from '../models/StoreDataImport.js';
@@ -117,8 +118,20 @@ export const importCsv = async (req, res, next) => {
         .json(formatError('CSV validation failed; no valid rows to import.', 'CSV_INVALID', report.errors));
     }
 
-    const userId = req.user?.id || 'demo_seller_user';
     const isDbConnected = mongoose.connection.readyState === 1;
+    let userId = req.user?.id || req.user?._id;
+    if (isDbConnected && (!userId || !mongoose.Types.ObjectId.isValid(userId))) {
+      try {
+        const dbUser = (await User.findOne({ email: req.user?.email })) || 
+                       (await User.findOne({ email: 'ratneshshirodkar17@gmail.com' })) || 
+                       (await User.findOne());
+        userId = dbUser ? dbUser._id : new mongoose.Types.ObjectId();
+      } catch {
+        userId = new mongoose.Types.ObjectId();
+      }
+    } else if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      userId = new mongoose.Types.ObjectId().toString();
+    }
 
     const importRecord = {
       id: 'imp_' + Date.now(),
@@ -434,7 +447,51 @@ export const getGoalProgress = async (req, res, next) => {
  */
 export const getRecoveryChat = async (req, res, next) => {
   try {
-    const advice = await generateRecoveryAdvice(req.body);
+    let payload = { ...req.body };
+    const goalId = req.params.id;
+
+    if (!payload.financials || !payload.goalMetrics?.target) {
+      const isDbConnected = mongoose.connection.readyState === 1;
+      const userId = req.user?.id;
+
+      let goal = null;
+      if (goalId && mongoose.Types.ObjectId.isValid(goalId)) {
+        goal = await ProfitGoal.findById(goalId);
+      }
+      if (!goal && isDbConnected) {
+        goal = await ProfitGoal.findOne(userId ? { userId } : {}).sort({ createdAt: -1 });
+      }
+
+      let ordersList = [];
+      if (isDbConnected) {
+        ordersList = await Order.find(userId ? { userId } : {});
+      }
+      if (!ordersList || ordersList.length === 0) {
+        ordersList = sampleOrderRecords;
+      }
+
+      const target = Number(payload.target || payload.goalMetrics?.target || goal?.targetProfit || goal?.monthlyNetProfitTarget || 50000);
+      const metrics = aggregateOrdersProfit(ordersList);
+      const currentNetProfit = metrics.financials.netProfit;
+      const remainingProfit = Math.max(0, target - currentNetProfit);
+      const progressPercent = target > 0 ? Number(((currentNetProfit / target) * 100).toFixed(1)) : 0;
+
+      payload.goalMetrics = {
+        target,
+        currentNetProfit,
+        remainingProfit,
+        progressPercent,
+        ...(payload.goalMetrics || {}),
+      };
+      payload.financials = {
+        ...metrics.financials,
+        ...(payload.financials || {}),
+      };
+      payload.productPerformance = metrics.productPerformance;
+      payload.dataSource = ordersList === sampleOrderRecords ? 'demo_fixture' : 'database_orders';
+    }
+
+    const advice = await generateRecoveryAdvice(payload);
     return res.json(formatSuccess(advice, 'Recovery advice generated'));
   } catch (err) {
     next(err);

@@ -120,6 +120,51 @@ const runProductTests = async () => {
         'T-009: POST /api/products/:id/save saves item to user catalogue with auth (HTTP 201)'
       );
 
+      // 9. POST /api/products/semantic-search - Phase 2 Hugging Face MiniLM
+      const semRes = await fetch(`http://127.0.0.1:${PORT}/api/products/semantic-search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: 'ergonomic office typing' }),
+      });
+      const semData = await semRes.json();
+      assert(
+        semRes.status === 200 &&
+          semData.success === true &&
+          Array.isArray(semData.data?.results) &&
+          semData.data.results.length > 0 &&
+          semData.data.results[0].product.title.toLowerCase().includes('keyboard'),
+        'Phase 2: POST /api/products/semantic-search ranks products using sentence-transformers (HTTP 200)'
+      );
+
+      // 10. GET /api/products/:id/sentiment - Phase 2 Hugging Face RoBERTa
+      const sentRes = await fetch(`http://127.0.0.1:${PORT}/api/products/prod_001/sentiment`);
+      const sentData = await sentRes.json();
+      assert(
+        sentRes.status === 200 &&
+          sentData.success === true &&
+          sentData.data?.sentimentAvailable === true &&
+          ['POSITIVE', 'MIXED'].includes(sentData.data?.overallLabel) &&
+          sentData.data?.analyzedReviewsCount > 0,
+        'Phase 2: GET /api/products/:id/sentiment analyzes customer reviews using RoBERTa (HTTP 200)'
+      );
+
+      // 11. GET /api/products/recommendations - Phase 3 Multi-Criteria Opportunity Engine
+      const recRes = await fetch(`http://127.0.0.1:${PORT}/api/products/recommendations?limit=5`);
+      const recData = await recRes.json();
+      assert(
+        recRes.status === 200 &&
+          recData.success === true &&
+          Array.isArray(recData.data?.recommendations) &&
+          recData.data.recommendations.length > 0 &&
+          recData.data.recommendations[0].opportunityScore !== undefined &&
+          recData.data.recommendations[0].scoreBreakdown?.marginContribution !== undefined &&
+          recData.data.recommendations[0].scoreBreakdown?.demandContribution !== undefined &&
+          recData.data.recommendations[0].scoreBreakdown?.supplierContribution !== undefined &&
+          recData.data.recommendations[0].recommendationReason !== undefined &&
+          recData.data.recommendations[0].opportunityScore >= recData.data.recommendations[1].opportunityScore,
+        'Phase 3: GET /api/products/recommendations ranks products via Multi-Criteria Opportunity Engine (HTTP 200)'
+      );
+
       console.log(`\n----------------------------------------`);
       console.log(` Results: ${passed} passed, ${failed} failed`);
       console.log(`----------------------------------------\n`);
