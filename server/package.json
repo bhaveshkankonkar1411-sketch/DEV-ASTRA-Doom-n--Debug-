@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node tests/auth.test.js && node tests/products.test.js && node tests/pricing.test.js && node tests/csv.test.js && node tests/orders.test.js",
+    "test": "node tests/auth.test.js && node tests/products.test.js && node tests/pricing.test.js && node tests/suppliers.test.js && node tests/csv.test.js && node tests/orders.test.js",
     "seed": "node src/scripts/seed.js"
   },
   "dependencies": {

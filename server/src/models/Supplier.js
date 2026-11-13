@@ -23,6 +23,18 @@ const supplierSchema = new mongoose.Schema(
       enum: ['DEMO_FIXTURE', 'VERIFIED_PARTNER', 'ALIEXPRESS_SUPPLIER', 'CJ_SUPPLIER'],
       default: 'DEMO_FIXTURE',
     },
+    sourceType: {
+      type: String,
+      enum: ['demo', 'verified_partner', 'aliexpress', 'cj_dropshipping'],
+      default: 'demo',
+    },
+    availability: {
+      type: String,
+      enum: ['in_stock', 'limited_stock', 'out_of_stock'],
+      default: 'in_stock',
+    },
+    yearsInBusiness: { type: Number, default: 1 },
+    returnRate: { type: Number, default: 1.0 },
     contactEmail: { type: String, default: '' },
   },
   { timestamps: true }

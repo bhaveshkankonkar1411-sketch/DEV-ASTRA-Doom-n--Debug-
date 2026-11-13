@@ -38,6 +38,10 @@ export const seedDatabase = async () => {
         rating: s.rating,
         fulfillmentRate: s.fulfillmentRate,
         sourceLabel: s.sourceLabel,
+        sourceType: s.sourceType,
+        availability: s.availability,
+        yearsInBusiness: s.yearsInBusiness,
+        returnRate: s.returnRate,
         contactEmail: s.contactEmail,
       }))
     );
