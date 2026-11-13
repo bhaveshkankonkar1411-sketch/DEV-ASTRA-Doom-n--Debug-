@@ -1,15 +1,9 @@
-import React from 'react';
-
-export const Navbar = () => {
-  return (
-    <nav className="navbar">
-      <div className="navbar-brand">DropPilot AI</div>
-      <div className="navbar-links">
-        {/* Navigation links placeholder */}
-      </div>
-    </nav>
-  );
-};
+export const Navbar = ({ children }) => (
+  <nav className="navbar" aria-label="Account navigation">
+    <div className="navbar-brand">DropPilot AI</div>
+    <div className="navbar-links">{children}</div>
+  </nav>
+);
 
 export default Navbar;
 
