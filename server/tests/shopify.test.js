@@ -7,6 +7,7 @@ import http from 'http';
 import jwt from 'jsonwebtoken';
 import app from '../src/app.js';
 import config from '../src/config/environment.js';
+import { clearSyncRegistry } from '../src/services/shopify/shopifySyncService.js';
 
 let passed = 0;
 let failed = 0;
@@ -23,7 +24,7 @@ const assert = (condition, description) => {
 
 const runShopifyTests = async () => {
   console.log('\n========================================');
-  console.log(' DropPilot Backend Verification: T-026 Shopify Store Sync API');
+  console.log(' DropPilot Backend Verification: T-026 Shopify Store Sync API (9 tests)');
   console.log('========================================\n');
 
   const server = http.createServer(app);
@@ -142,7 +143,51 @@ const runShopifyTests = async () => {
     );
 
     // ----------------------------------------------------
-    // Test 7: Disconnect Store (PRD 10.6)
+    // Test 7: Idempotency — repeated sync must not falsely claim "created" (PRD 3.5)
+    // ----------------------------------------------------
+    clearSyncRegistry(); // reset so we control state
+
+    const idempotPayload = {
+      productId: 'prod_idempotency_check',
+      listing: {
+        title: 'Idempotency Test Product',
+        price: '999.00',
+        currency: 'INR',
+      },
+      mode: 'create',
+    };
+
+    // First sync — should be "create"
+    const firstSyncRes = await fetch(`${baseUrl}/api/shopify/sync`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify(idempotPayload),
+    });
+    const firstSyncData = await firstSyncRes.json();
+    const firstExternalId = firstSyncData.data?.externalProductId;
+
+    assert(
+      firstSyncRes.status === 200 && firstSyncData.data?.mode === 'create',
+      'T-026 Idempotency: First sync of a product is correctly reported as mode "create"'
+    );
+
+    // Second sync of same productId — must return "update" and reuse same externalProductId
+    const secondSyncRes = await fetch(`${baseUrl}/api/shopify/sync`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify(idempotPayload),
+    });
+    const secondSyncData = await secondSyncRes.json();
+
+    assert(
+      secondSyncRes.status === 200 &&
+        secondSyncData.data?.mode === 'update' &&
+        secondSyncData.data?.externalProductId === firstExternalId,
+      'T-026 Idempotency (PRD 3.5): Repeated sync of same productId returns mode "update" with identical externalProductId — never falsely claims "created"'
+    );
+
+    // ----------------------------------------------------
+    // Test 8: Disconnect Store (PRD 10.6)
     // ----------------------------------------------------
     const disconnectRes = await fetch(`${baseUrl}/api/shopify/disconnect`, {
       method: 'DELETE',
