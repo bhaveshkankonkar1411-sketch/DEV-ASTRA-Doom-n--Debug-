@@ -430,11 +430,58 @@ export const getGoalProgress = async (req, res, next) => {
 };
 
 /**
- * POST /api/profit-goals/:id/recovery-chat
+ * POST /api/profit-goals/:id/recovery-chat & /api/goals/:id/recovery-chat
  */
 export const getRecoveryChat = async (req, res, next) => {
   try {
-    const advice = await generateRecoveryAdvice(req.body);
+    const goalId = req.params.id || req.body.goalId;
+    let goalMetrics = req.body.goalMetrics || {};
+    let financials = req.body.financials || {};
+
+    if (goalId && (!goalMetrics.target || goalMetrics.target === 0)) {
+      try {
+        const isDbConnected = mongoose.connection.readyState === 1;
+        let goal = null;
+        if (isDbConnected && mongoose.Types.ObjectId.isValid(goalId)) {
+          goal = await ProfitGoal.findById(goalId);
+        } else {
+          goal = inMemoryGoals.find((g) => g._id === goalId || g.id === goalId);
+        }
+
+        if (goal) {
+          goalMetrics = {
+            target: goal.targetProfit || goal.monthlyNetProfitTarget,
+            currentNetProfit: goal.currentProfit,
+            remainingProfit: Math.max(0, (goal.targetProfit || goal.monthlyNetProfitTarget) - goal.currentProfit),
+            progressPercent: (goal.targetProfit || goal.monthlyNetProfitTarget) > 0 ? (goal.currentProfit / (goal.targetProfit || goal.monthlyNetProfitTarget)) * 100 : 0,
+            status: goal.status,
+            targetDate: goal.targetDate,
+          };
+        }
+      } catch {
+        // Disconnected DB fallback
+      }
+    }
+
+    // Default sample goal metrics if none provided
+    if (!goalMetrics.target && !goalMetrics.monthlyNetProfitTarget) {
+      goalMetrics = {
+        target: 10000000,
+        currentNetProfit: 6500000,
+        remainingProfit: 3500000,
+        progressPercent: 65.0,
+      };
+    }
+
+    const payload = {
+      question: req.body.question || 'Why am I behind my monthly profit target?',
+      goalMetrics,
+      financials,
+      productPerformance: req.body.productPerformance || [],
+      dataSource: req.body.dataSource || 'csv_import',
+    };
+
+    const advice = await generateRecoveryAdvice(payload);
     return res.json(formatSuccess(advice, 'Recovery advice generated'));
   } catch (err) {
     next(err);

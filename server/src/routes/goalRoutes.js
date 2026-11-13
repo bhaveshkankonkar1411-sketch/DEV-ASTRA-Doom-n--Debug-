@@ -28,6 +28,7 @@ router.post('/import-csv', upload.single('file'), importCsv);
 
 // Profit Goal Management (T-023 per PRD Section 10.8)
 router.post('/', authenticateToken, createGoal);
+router.post('/recovery-assistant', authenticateToken, getRecoveryChat);
 router.get('/', authenticateToken, getGoals);
 router.get('/current', authenticateToken, getCurrentGoal);
 router.post('/analyze', authenticateToken, analyzeGoal);

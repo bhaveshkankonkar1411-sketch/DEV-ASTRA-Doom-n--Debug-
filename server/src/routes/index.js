@@ -14,6 +14,7 @@ const router = express.Router();
 router.use('/auth', authRoutes);
 router.use('/products', productRoutes);
 router.use('/listings', listingRoutes);
+router.use('/ai/listings', listingRoutes);
 router.use('/suppliers', supplierRoutes);
 router.use('/pricing', pricingRoutes);
 router.use('/shopify', shopifyRoutes);

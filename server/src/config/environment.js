@@ -7,6 +7,8 @@ export const config = {
   mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/droppilot',
   jwtSecret: process.env.JWT_SECRET || 'dev_secret_key',
   geminiApiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
+  isGeminiConfigured: Boolean(process.env.GEMINI_API_KEY),
   shopify: {
     clientId: process.env.SHOPIFY_CLIENT_ID || '',
     clientSecret: process.env.SHOPIFY_CLIENT_SECRET || '',
