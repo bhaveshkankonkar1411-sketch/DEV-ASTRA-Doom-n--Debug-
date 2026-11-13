@@ -1,60 +1,93 @@
-import React, { createContext, useState, useEffect } from 'react';
+import { createContext, useEffect, useState } from 'react';
 import authService from '../services/authService';
-
 export const AuthContext = createContext(null);
-
-export const AuthProvider = ({ children }) => {
+const readProfile = () => {
+  try {
+    const profile = JSON.parse(localStorage.getItem('droppilot_user'));
+    return profile && typeof profile.name === 'string' && profile.name.trim() ? profile : null;
+  } catch {
+    return null;
+  }
+};
+const saveProfile = profile => {
+  try {
+    localStorage.setItem('droppilot_user', JSON.stringify(profile));
+  } catch {}
+};
+export function AuthProvider({
+  children
+}) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    const initializeAuth = async () => {
+    let cancelled = false;
+    async function initialize() {
+      const profile = readProfile();
       const token = localStorage.getItem('token');
-      const savedProfile = localStorage.getItem('droppilot_user');
-      const localUser = savedProfile ? JSON.parse(savedProfile) : null;
-      if (token) {
+      let next = null;
+      if (profile?.sessionMode === 'demo') {
+        next = profile;
+      } else if (token && token !== 'mock_jwt_token') {
         try {
-          const res = await authService.getCurrentUser();
-          const authenticatedUser = res.data?.user || localUser;
-          setUser(authenticatedUser);
-          if (authenticatedUser) localStorage.setItem('droppilot_user', JSON.stringify(authenticatedUser));
-        } catch (err) {
+          const result = await authService.getCurrentUser();
+          if (typeof result.data?.user?.name === 'string' && result.data.user.name.trim()) {
+            next = {
+              ...profile,
+              ...result.data.user,
+              sessionMode: 'api'
+            };
+            saveProfile(next);
+          } else localStorage.removeItem('token');
+        } catch {
           localStorage.removeItem('token');
-          setUser(localUser);
         }
-      } else {
-        setUser(localUser);
+      } else if (profile && !profile.sessionMode && !token) {
+        next = {
+          ...profile,
+          sessionMode: 'demo'
+        };
+        saveProfile(next);
+      } else if (token === 'mock_jwt_token') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('droppilot_user');
       }
-      setLoading(false);
+      if (!cancelled) {
+        setUser(next);
+        setLoading(false);
+      }
+    }
+    initialize();
+    return () => {
+      cancelled = true;
     };
-
-    initializeAuth();
   }, []);
-
-  const login = (token, userData) => {
-    if (token) localStorage.setItem('token', token);
-    localStorage.setItem('droppilot_user', JSON.stringify(userData));
-    setUser(userData);
-  };
-
-  const updateProfile = (profile) => {
-    const nextUser = { ...user, ...profile };
-    localStorage.setItem('droppilot_user', JSON.stringify(nextUser));
-    setUser(nextUser);
-  };
-
-  const logout = () => {
+  function login(token, profile) {
+    if (token) localStorage.setItem('token', token);else localStorage.removeItem('token');
+    saveProfile(profile);
+    setUser(profile);
+  }
+  function updateProfile(patch) {
+    setUser(current => {
+      const next = {
+        ...current,
+        ...patch
+      };
+      saveProfile(next);
+      return next;
+    });
+  }
+  function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('droppilot_user');
     setUser(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, loading, login, updateProfile, logout, isAuthenticated: Boolean(user) }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
+  }
+  return <AuthContext.Provider value={{
+    user,
+    loading,
+    login,
+    updateProfile,
+    logout,
+    isAuthenticated: Boolean(user)
+  }}>{children}</AuthContext.Provider>;
+}
 export default AuthContext;
-
