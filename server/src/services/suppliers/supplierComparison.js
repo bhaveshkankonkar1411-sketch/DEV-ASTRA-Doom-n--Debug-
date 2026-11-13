@@ -3,6 +3,7 @@
  * Strictly follows PRD Sections 3.4, 3.7, 10.4 and integrity rules.
  */
 
+import mongoose from 'mongoose';
 import Supplier from '../../models/Supplier.js';
 import Product from '../../models/Product.js';
 import { sampleSuppliers, sampleProducts } from '../../fixtures/sampleData.js';
@@ -60,17 +61,19 @@ export const evaluateTrustProvenance = (supplier) => {
  * Get all available suppliers (MongoDB first, falling back to sample fixtures)
  */
 export const getAllSuppliers = async () => {
-  try {
-    const dbSuppliers = await Supplier.find().lean();
-    if (dbSuppliers && dbSuppliers.length > 0) {
-      return dbSuppliers.map((s) => ({
-        ...s,
-        id: s._id.toString(),
-        ...evaluateTrustProvenance(s),
-      }));
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const dbSuppliers = await Supplier.find().lean();
+      if (dbSuppliers && dbSuppliers.length > 0) {
+        return dbSuppliers.map((s) => ({
+          ...s,
+          id: s._id.toString(),
+          ...evaluateTrustProvenance(s),
+        }));
+      }
+    } catch (err) {
+      // Database disconnected, fall back to sample fixtures gracefully
     }
-  } catch (err) {
-    // Database disconnected, fall back to sample fixtures gracefully
   }
 
   return sampleSuppliers.map((s) => ({
@@ -83,17 +86,19 @@ export const getAllSuppliers = async () => {
  * Get single supplier by ID (supports MongoDB _id or fixture id)
  */
 export const getSupplierById = async (id) => {
-  try {
-    const supplier = await Supplier.findById(id).lean();
-    if (supplier) {
-      return {
-        ...supplier,
-        id: supplier._id.toString(),
-        ...evaluateTrustProvenance(supplier),
-      };
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const supplier = await Supplier.findById(id).lean();
+      if (supplier) {
+        return {
+          ...supplier,
+          id: supplier._id.toString(),
+          ...evaluateTrustProvenance(supplier),
+        };
+      }
+    } catch (err) {
+      // Fallback if not valid ObjectId
     }
-  } catch (err) {
-    // Fallback if not valid ObjectId
   }
 
   const fixture = sampleSuppliers.find((s) => s.id === id);
