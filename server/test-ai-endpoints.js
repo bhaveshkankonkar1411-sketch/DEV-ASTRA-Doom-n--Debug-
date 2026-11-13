@@ -164,6 +164,24 @@ async function runEndpointTests() {
     const chatJson = await chatRes.json();
     assert(chatJson.success === true && Boolean(chatJson.data.answer), 'Goal recovery chat responds with verified guidance');
 
+    // -------------------------------------------------------------------------
+    // Task T-024 (Variant 3): PRD Section 10.9 endpoint (/api/profit-goals/recovery-assistant)
+    // -------------------------------------------------------------------------
+    console.log('\n--- Task T-024: PRD 10.9 Endpoint (POST /api/profit-goals/recovery-assistant) ---');
+    const profitGoalAssistantRes = await fetch(`${baseUrl}/profit-goals/recovery-assistant`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({
+        goalId: 'demo_goal_999',
+        question: 'Why am I behind my monthly profit target?',
+        financials: { revenue: 20000000, supplierCosts: 10000000, advertisingCosts: 6000000 },
+      }),
+    });
+    assert(profitGoalAssistantRes.status === 200, 'POST /api/profit-goals/recovery-assistant returns 200 OK');
+    const profitGoalJson = await profitGoalAssistantRes.json();
+    assert(profitGoalJson.success === true && Boolean(profitGoalJson.data.answer), 'POST /api/profit-goals/recovery-assistant returns grounded advice');
+    assert(profitGoalJson.data.limitations?.length > 0, 'Recovery advice explicitly states analytical limitations');
+
     console.log('\n======================================================');
     console.log(`Results: ${passed}/${total} endpoint tests passed`);
     console.log('======================================================\n');
