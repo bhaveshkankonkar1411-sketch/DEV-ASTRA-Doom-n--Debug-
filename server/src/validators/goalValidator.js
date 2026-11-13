@@ -1,10 +1,30 @@
-// Profit Goal validation rules placeholder
+/**
+ * Validation rules for Profit Goals per PRD Section 10.8
+ */
 
-export const validateGoal = (data) => {
+export const validateGoal = (data = {}) => {
   const errors = [];
-  if (!data.title) errors.push({ field: 'title', message: 'Goal title is required' });
-  if (data.targetProfit == null || data.targetProfit <= 0) errors.push({ field: 'targetProfit', message: 'Target profit must be positive' });
-  if (!data.targetDate) errors.push({ field: 'targetDate', message: 'Target deadline date is required' });
-  return { isValid: errors.length === 0, errors };
+
+  const target = data.monthlyNetProfitTarget != null ? data.monthlyNetProfitTarget : data.targetProfit;
+
+  if (target == null || typeof target !== 'number' || isNaN(target) || target <= 0) {
+    errors.push({
+      field: 'monthlyNetProfitTarget',
+      message: 'Monthly net profit target must be a positive number',
+    });
+  }
+
+  if (data.month && !/^\d{4}-\d{2}$/.test(data.month.trim())) {
+    errors.push({
+      field: 'month',
+      message: 'Month must follow YYYY-MM format (e.g., 2026-11)',
+    });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
 };
 
+export default validateGoal;
