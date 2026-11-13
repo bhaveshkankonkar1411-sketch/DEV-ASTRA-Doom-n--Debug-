@@ -10,14 +10,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('token');
+      const savedProfile = localStorage.getItem('droppilot_user');
+      const localUser = savedProfile ? JSON.parse(savedProfile) : null;
       if (token) {
         try {
           const res = await authService.getCurrentUser();
-          setUser(res.data?.user || null);
+          const authenticatedUser = res.data?.user || localUser;
+          setUser(authenticatedUser);
+          if (authenticatedUser) localStorage.setItem('droppilot_user', JSON.stringify(authenticatedUser));
         } catch (err) {
           localStorage.removeItem('token');
-          setUser(null);
+          setUser(localUser);
         }
+      } else {
+        setUser(localUser);
       }
       setLoading(false);
     };
@@ -26,17 +32,25 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (token, userData) => {
-    localStorage.setItem('token', token);
+    if (token) localStorage.setItem('token', token);
+    localStorage.setItem('droppilot_user', JSON.stringify(userData));
     setUser(userData);
+  };
+
+  const updateProfile = (profile) => {
+    const nextUser = { ...user, ...profile };
+    localStorage.setItem('droppilot_user', JSON.stringify(nextUser));
+    setUser(nextUser);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('droppilot_user');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: Boolean(user) }}>
+    <AuthContext.Provider value={{ user, loading, login, updateProfile, logout, isAuthenticated: Boolean(user) }}>
       {children}
     </AuthContext.Provider>
   );
