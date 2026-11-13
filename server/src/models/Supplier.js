@@ -16,6 +16,13 @@ const supplierSchema = new mongoose.Schema(
       enum: ['VERIFIED', 'TOP_RATED', 'STANDARD', 'UNVERIFIED'],
       default: 'STANDARD',
     },
+    rating: { type: Number, min: 0, max: 5, default: 4.5 },
+    fulfillmentRate: { type: Number, min: 0, max: 100, default: 98 },
+    sourceLabel: {
+      type: String,
+      enum: ['DEMO_FIXTURE', 'VERIFIED_PARTNER', 'ALIEXPRESS_SUPPLIER', 'CJ_SUPPLIER'],
+      default: 'DEMO_FIXTURE',
+    },
     contactEmail: { type: String, default: '' },
   },
   { timestamps: true }

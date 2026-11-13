@@ -12,6 +12,14 @@ const productSchema = new mongoose.Schema(
     demandScore: { type: Number, default: 0 },
     trendVelocity: { type: String, enum: ['RISING', 'STABLE', 'FALLING'], default: 'STABLE' },
     imageUrl: { type: String, default: '' },
+    currency: { type: String, default: 'INR' },
+    sourceLabel: {
+      type: String,
+      enum: ['DEMO_CATALOGUE', 'CURATED_FEED', 'ALIEXPRESS', 'CJ_DROPSHIPPING'],
+      default: 'DEMO_CATALOGUE',
+    },
+    sku: { type: String, default: '' },
+    inventoryCount: { type: Number, default: 100 },
     suppliers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' }],
   },
   { timestamps: true }

@@ -1,9 +1,13 @@
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import config from '../config/environment.js';
 import { formatSuccess, formatError } from '../utils/responseFormatter.js';
 import { validateRegistration, validateLogin } from '../validators/authValidator.js';
+
+// In-memory fallback store for dev/test when MongoDB is not connected
+const inMemoryUsers = new Map();
 
 export const register = async (req, res, next) => {
   try {
@@ -15,22 +19,48 @@ export const register = async (req, res, next) => {
     const { name, email, password } = req.body;
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: normalizedEmail });
-    if (existingUser) {
-      return res.status(409).json(formatError('An account with this email already exists', 'EMAIL_ALREADY_EXISTS'));
+    // Check if MongoDB is connected
+    const isDbConnected = mongoose.connection.readyState === 1;
+
+    let user;
+    if (isDbConnected) {
+      // Check if user already exists
+      const existingUser = await User.findOne({ email: normalizedEmail });
+      if (existingUser) {
+        return res.status(409).json(formatError('An account with this email already exists', 'EMAIL_ALREADY_EXISTS'));
+      }
+
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password, salt);
+
+      // Create user
+      user = await User.create({
+        name: name.trim(),
+        email: normalizedEmail,
+        passwordHash,
+      });
+    } else {
+      // Fallback in-memory store
+      if (inMemoryUsers.has(normalizedEmail)) {
+        return res.status(409).json(formatError('An account with this email already exists', 'EMAIL_ALREADY_EXISTS'));
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password, salt);
+      const id = new mongoose.Types.ObjectId().toString();
+
+      user = {
+        _id: id,
+        name: name.trim(),
+        email: normalizedEmail,
+        passwordHash,
+        shopifyStore: { isConnected: false, shopDomain: null, accessToken: null },
+      };
+
+      inMemoryUsers.set(normalizedEmail, user);
+      inMemoryUsers.set(id, user);
     }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    // Create user
-    const user = await User.create({
-      name: name.trim(),
-      email: normalizedEmail,
-      passwordHash,
-    });
 
     // Generate JWT
     const token = jwt.sign(
@@ -66,9 +96,16 @@ export const login = async (req, res, next) => {
 
     const { email, password } = req.body;
     const normalizedEmail = email.toLowerCase().trim();
+    const isDbConnected = mongoose.connection.readyState === 1;
 
     // Find user
-    const user = await User.findOne({ email: normalizedEmail });
+    let user;
+    if (isDbConnected) {
+      user = await User.findOne({ email: normalizedEmail });
+    } else {
+      user = inMemoryUsers.get(normalizedEmail);
+    }
+
     if (!user) {
       return res.status(401).json(formatError('Invalid email or password', 'INVALID_CREDENTIALS'));
     }
@@ -106,7 +143,15 @@ export const login = async (req, res, next) => {
 
 export const getCurrentUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select('-passwordHash');
+    const isDbConnected = mongoose.connection.readyState === 1;
+    let user;
+
+    if (isDbConnected) {
+      user = await User.findById(req.user.id).select('-passwordHash');
+    } else {
+      user = inMemoryUsers.get(req.user.id);
+    }
+
     if (!user) {
       return res.status(404).json(formatError('User not found', 'NOT_FOUND'));
     }
