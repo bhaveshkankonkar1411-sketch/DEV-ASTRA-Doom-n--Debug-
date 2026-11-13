@@ -11,6 +11,7 @@ import authenticateToken from '../middleware/auth.js';
 const router = express.Router();
 
 router.post('/', authenticateToken, createGoal);
+router.post('/recovery-assistant', authenticateToken, getRecoveryChat);
 router.get('/', authenticateToken, getGoals);
 router.get('/:id', authenticateToken, getGoalById);
 router.get('/:id/progress', authenticateToken, getGoalProgress);
