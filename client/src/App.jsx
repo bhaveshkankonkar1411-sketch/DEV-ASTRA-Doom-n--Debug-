@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import authService from './services/authService';
+import analyticsService from './services/analyticsService';
 import { Count, Field, Icon, initials, Modal, money, navigation, PageHead, plans, ProductArt, products, suppliers, useStored } from './components/StudioUI';
 import { GoalRing, RevenueChart } from './components/charts/StudioCharts';
 import { Discovery, Goals, ListingStudio, Shopify, SupplierComparison } from './pages/StudioWorkspaces';
@@ -114,17 +115,39 @@ function Overview({
   onSelect
 }) {
   const [now, setNow] = useState(new Date());
+  const [liveMetrics, setLiveMetrics] = useState(null);
+
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    if (user?.sessionMode === 'api') {
+      analyticsService.getSummary()
+        .then(res => {
+          if (active && res.data) {
+            setLiveMetrics(res.data);
+          }
+        })
+        .catch(() => {});
+    }
+    return () => { active = false; };
+  }, [user]);
+
   const greeting = now.getHours() < 12 ? 'morning' : now.getHours() < 18 ? 'afternoon' : 'evening';
-  return <><PageHead eyebrow={<><span className="status-dot" /> YOUR BUSINESS AT A GLANCE</>} title={<>Good {greeting}, <span className="gradient-text">{user.name.split(' ')[0]}</span><span className="greeting-wave">✦</span></>} description={<>Let’s make your next move a great one. <span className="date-label">{now.toLocaleDateString('en-IN', {
+  const rev = liveMetrics?.totalRevenue ?? 124820;
+  const profit = liveMetrics?.totalProfit ?? 42618;
+  const margin = liveMetrics?.netMargin ?? 34.1;
+  const isLive = Boolean(liveMetrics && user?.sessionMode === 'api');
+
+  return <><PageHead eyebrow={<><span className="status-dot" /> {isLive ? 'LIVE STORE OVERVIEW' : 'YOUR BUSINESS AT A GLANCE'}</>} title={<>Good {greeting}, <span className="gradient-text">{user.name.split(' ')[0]}</span><span className="greeting-wave">✦</span></>} description={<>Let’s make your next move a great one. <span className="date-label">{now.toLocaleDateString('en-IN', {
           weekday: 'short',
           day: 'numeric',
           month: 'long',
           year: 'numeric'
-        })}</span></>} action={<button className="primary" onClick={onDiscover}><Icon name="plus" size={18} /> Find winning products</button>} /><div className="metrics-grid"><Metric label="Store revenue" value={124820} format={money} delta="18.2%" icon="wallet" tone="violet" /><Metric label="Net profit" value={42618} format={money} delta="12.4%" icon="pulse" tone="mint" /><Metric label="Active products" value={24} delta="3 products" icon="box" tone="blue" /><Metric label="Avg. margin" value={34.1} format={v => v.toFixed(1) + '%'} delta="2.7%" icon="sliders" tone="peach" /></div><div className="dashboard-chart-grid"><RevenueChart /><GoalRing target={target} onEdit={onGoal} /></div><div className="dashboard-bottom-grid"><section className="panel top-products"><div className="section-head"><div><h2>Top products</h2><p>Small discoveries. Big potential.</p></div><button className="text-button" onClick={() => onNavigate('discover')}>View all <Icon name="arrow" size={16} /></button></div><div className="table-labels"><span>PRODUCT</span><span>GROSS PROFIT / UNIT</span></div>{products.slice(0, 3).map((p, i) => <button className="top-product-row" key={p.id} onClick={() => onSelect(p)}><span className="row-index">0{i + 1}</span><ProductArt product={p} small /><span className="product-name"><b>{p.name}</b><small>{p.orders.toLocaleString()} sample orders</small></span><strong>{money(p.price - p.cost)}<small>per unit</small></strong><Icon name="arrow" size={16} /></button>)}</section><section className="panel actions-panel"><div className="section-head"><div><h2>Action center</h2><p>A little focus goes a long way.</p></div><span className="action-count">3</span></div>{[['spark', 'violet', 'Bring your next listing to life', 'Create a product story that connects.', 'listing'], ['box', 'blue', 'Find your ideal supplier', 'Compare cost, speed, and reliability.', 'suppliers'], ['target', 'mint', 'Keep your goal in sight', `${money(Math.max(0, target - 42618))} left to your monthly target.`, 'goals']].map(([icon, tone, title, sub, page]) => <button className="action-row" key={page} onClick={() => onNavigate(page)}><span className={`metric-orb ${tone}`}><Icon name={icon} /></span><span><b>{title}</b><small>{sub}</small></span><Icon name="arrow" size={17} /></button>)}</section></div><div className="dashboard-foot"><span><Icon name="spark" size={15} /> A clearer view. A more confident you.</span><span>Sample workspace · All figures are illustrative</span></div></>;
+        })}</span>{isLive ? ' · Connected to backend order ledger' : ''}</>} action={<button className="primary" onClick={onDiscover}><Icon name="plus" size={18} /> Find winning products</button>} /><div className="metrics-grid"><Metric label="Store revenue" value={rev} format={money} delta="18.2%" icon="wallet" tone="violet" /><Metric label="Net profit" value={profit} format={money} delta="12.4%" icon="pulse" tone="mint" /><Metric label="Active products" value={liveMetrics?.unitsSold ?? 24} delta="3 products" icon="box" tone="blue" /><Metric label="Avg. margin" value={margin} format={v => (typeof v === 'number' ? v.toFixed(1) : v) + '%'} delta="2.7%" icon="sliders" tone="peach" /></div><div className="dashboard-chart-grid"><RevenueChart /><GoalRing target={target} onEdit={onGoal} /></div><div className="dashboard-bottom-grid"><section className="panel top-products"><div className="section-head"><div><h2>Top products</h2><p>Small discoveries. Big potential.</p></div><button className="text-button" onClick={() => onNavigate('discover')}>View all <Icon name="arrow" size={16} /></button></div><div className="table-labels"><span>PRODUCT</span><span>GROSS PROFIT / UNIT</span></div>{products.slice(0, 3).map((p, i) => <button className="top-product-row" key={p.id} onClick={() => onSelect(p)}><span className="row-index">0{i + 1}</span><ProductArt product={p} small /><span className="product-name"><b>{p.name}</b><small>{p.orders.toLocaleString()} sample orders</small></span><strong>{money(p.price - p.cost)}<small>per unit</small></strong><Icon name="arrow" size={16} /></button>)}</section><section className="panel actions-panel"><div className="section-head"><div><h2>Action center</h2><p>A little focus goes a long way.</p></div><span className="action-count">3</span></div>{[['spark', 'violet', 'Bring your next listing to life', 'Create a product story that connects.', 'listing'], ['box', 'blue', 'Find your ideal supplier', 'Compare cost, speed, and reliability.', 'suppliers'], ['target', 'mint', 'Keep your goal in sight', `${money(Math.max(0, target - 42618))} left to your monthly target.`, 'goals']].map(([icon, tone, title, sub, page]) => <button className="action-row" key={page} onClick={() => onNavigate(page)}><span className={`metric-orb ${tone}`}><Icon name={icon} /></span><span><b>{title}</b><small>{sub}</small></span><Icon name="arrow" size={17} /></button>)}</section></div><div className="dashboard-foot"><span><Icon name="spark" size={15} /> A clearer view. A more confident you.</span><span>Sample workspace · All figures are illustrative</span></div></>;
 }
 function ProfileForm({
   user,

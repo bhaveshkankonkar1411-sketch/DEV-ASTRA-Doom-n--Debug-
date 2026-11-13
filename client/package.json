@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test tests/goalContract.test.mjs tests/pricingContract.test.mjs tests/productSupplierContract.test.mjs tests/shopifyContract.test.mjs tests/workspaceMath.test.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
