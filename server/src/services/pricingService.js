@@ -1,11 +1,9 @@
-import { calculateProfitMetrics } from '../utils/financialCalculator.js';
+import { calculateProductPricing } from '../utils/financialCalculator.js';
 
-// Dynamic pricing simulation service placeholder
 export const calculatePricingScenarios = (params) => {
-  return calculateProfitMetrics(params);
+  return calculateProductPricing(params);
 };
 
 export default {
   calculatePricingScenarios,
 };
-

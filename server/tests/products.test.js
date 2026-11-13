@@ -127,8 +127,8 @@ const runProductTests = async () => {
       console.error('Test execution error:', err);
       failed++;
     } finally {
+      if (failed > 0) process.exitCode = 1;
       server.close();
-      process.exit(failed > 0 ? 1 : 0);
     }
   });
 };

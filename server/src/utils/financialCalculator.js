@@ -1,42 +1,70 @@
 /**
  * Deterministic Financial Calculations for DropPilot AI
- * Follows accounting formulas defined in PRD Section 3.9.1:
- * - Gross Revenue = Units Sold * Selling Price
- * - COGS = Units Sold * Supplier Cost Per Unit
- * - Total Shipping = Units Sold * Shipping Cost Per Unit
- * - Gross Profit = Gross Revenue - COGS - Total Shipping
- * - Total Platform Fees = Gross Revenue * Platform Fee %
- * - Net Profit = Gross Profit - Total Platform Fees - Ad Spend - Misc Overhead
- * - Net Margin % = (Net Profit / Gross Revenue) * 100
+ * Strict implementation of PRD Section 10.5 & Section 3.9:
+ * 
+ * Total Cost = Supplier Cost + Shipping Cost + Platform Fees + Ad Spend + Other Costs
+ * Estimated Profit = Selling Price - Total Cost
+ * Profit Margin % = (Estimated Profit / Selling Price) * 100
+ * Break-even Price = Total Cost
  */
 
-export const calculateProfitMetrics = ({
+export const calculateProductPricing = ({
+  currency = 'INR',
   sellingPrice = 0,
   supplierCost = 0,
   shippingCost = 0,
-  adSpendPerUnit = 0,
-  platformFeeRate = 0.029, // Default standard payment/platform processing fee
-  unitsSold = 1,
+  platformFees = 0,
+  advertisingCostPerOrder = 0,
+  otherCosts = 0,
 }) => {
-  const revenue = unitsSold * sellingPrice;
-  const cogs = unitsSold * supplierCost;
-  const shipping = unitsSold * shippingCost;
-  const platformFees = revenue * platformFeeRate;
-  const totalAdSpend = unitsSold * adSpendPerUnit;
+  const safeSellingPrice = Number(sellingPrice) || 0;
+  const safeSupplierCost = Number(supplierCost) || 0;
+  const safeShipping = Number(shippingCost) || 0;
+  const safePlatformFees = Number(platformFees) || 0;
+  const safeAdSpend = Number(advertisingCostPerOrder) || 0;
+  const safeOtherCosts = Number(otherCosts) || 0;
 
-  const totalCost = cogs + shipping + platformFees + totalAdSpend;
-  const netProfit = revenue - totalCost;
-  const marginPercentage = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+  const totalCost = Number(
+    (safeSupplierCost + safeShipping + safePlatformFees + safeAdSpend + safeOtherCosts).toFixed(2)
+  );
+
+  const estimatedProfit = Number((safeSellingPrice - totalCost).toFixed(2));
+
+  const profitMarginPercent =
+    safeSellingPrice > 0
+      ? Number(((estimatedProfit / safeSellingPrice) * 100).toFixed(2))
+      : 0;
+
+  // Break-even price is the exact total cost required to cover all expenses
+  const breakEvenPrice = totalCost;
+
+  // Recommended price target based on a healthy 30% margin rule
+  const target30Price =
+    totalCost > 0 ? Number((totalCost / (1 - 0.3)).toFixed(2)) : safeSellingPrice;
 
   return {
-    revenue: Number(revenue.toFixed(2)),
-    cogs: Number(cogs.toFixed(2)),
-    shipping: Number(shipping.toFixed(2)),
-    platformFees: Number(platformFees.toFixed(2)),
-    adSpend: Number(totalAdSpend.toFixed(2)),
-    totalCost: Number(totalCost.toFixed(2)),
-    netProfit: Number(netProfit.toFixed(2)),
-    marginPercentage: Number(marginPercentage.toFixed(2)),
+    currency,
+    totalCost,
+    estimatedProfit,
+    profitMarginPercent,
+    calculationBasis: 'backend',
+    isEstimate: true,
+    breakEvenPrice,
+    recommendedPrice: target30Price,
+    breakdown: {
+      sellingPrice: safeSellingPrice,
+      supplierCost: safeSupplierCost,
+      shippingCost: safeShipping,
+      platformFees: safePlatformFees,
+      advertisingCost: safeAdSpend,
+      otherCosts: safeOtherCosts,
+    },
   };
 };
 
+export const calculateProfitMetrics = calculateProductPricing;
+
+export default {
+  calculateProductPricing,
+  calculateProfitMetrics,
+};
