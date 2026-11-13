@@ -36,7 +36,27 @@ export const generateListing = async (req, res, next) => {
 
 export const generateMarketing = async (req, res, next) => {
   try {
-    const content = await generateMarketingContent(req.body);
+    let payload = { ...req.body };
+
+    // If productId is provided without explicit title, fetch details from Product catalog
+    if (payload.productId && !payload.productTitle && !payload.productDetails?.name && !payload.name) {
+      try {
+        const product = await Product.findById(payload.productId);
+        if (product) {
+          payload.productTitle = product.title;
+          payload.sellingPoints = product.tags || [];
+          payload.productDetails = {
+            name: product.title,
+            category: product.category,
+            description: product.description,
+          };
+        }
+      } catch {
+        // Fallback in disconnected DB mode
+      }
+    }
+
+    const content = await generateMarketingContent(payload);
     res.json(formatSuccess(content, 'Marketing content generated'));
   } catch (err) {
     next(err);

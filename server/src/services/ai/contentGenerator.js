@@ -6,14 +6,22 @@ import { validateMarketingContentOutput } from '../../validators/aiValidator.js'
  * Conforms to PRD Section 3.8 and Section 10.3
  */
 export const generateMarketingContent = async ({
+  productId = null,
   productTitle = '',
+  name = '',
+  productDetails = {},
   sellingPoints = [],
+  features = [],
   targetAudience = 'General shoppers',
   tone = 'energetic',
+  platform = 'all',
 }) => {
-  const effectiveTitle = productTitle || 'Featured Product';
-  const effectivePoints = Array.isArray(sellingPoints) && sellingPoints.length > 0
+  const effectiveTitle = productTitle || name || productDetails.name || 'Featured Product';
+  const rawPoints = (sellingPoints && sellingPoints.length > 0)
     ? sellingPoints
+    : (features && features.length > 0 ? features : (productDetails.features || []));
+  const effectivePoints = Array.isArray(rawPoints) && rawPoints.length > 0
+    ? rawPoints
     : ['Durable design', 'Modern aesthetic', 'Great value'];
 
   const prompt = `
@@ -22,6 +30,7 @@ Product: ${effectiveTitle}
 Key Selling Points: ${JSON.stringify(effectivePoints)}
 Target Audience: ${targetAudience}
 Tone: ${tone}
+Requested Platform Focus: ${platform}
 
 Return pure JSON matching this exact structure:
 {
@@ -30,12 +39,13 @@ Return pure JSON matching this exact structure:
   "adScript": "Hook: ... Problem: ... Solution: ... Call To Action: ...",
   "shopifySeo": {
     "metaTitle": "SEO title under 60 chars",
-    "metaDescription": "SEO description under 155 chars"
+    "metaDescription": "SEO description under 155 chars",
+    "keywords": ["keyword1", "keyword2", "keyword3"]
   }
 }
 `;
 
-  const systemInstruction = 'You are a viral social media marketing copywriter. Return strict JSON. Do not promise medical cures or financial gains.';
+  const systemInstruction = 'You are a viral social media marketing copywriter. Return strict JSON. Do not promise medical cures, guaranteed conversions, or financial gains. Ground copy exclusively in provided features.';
 
   const fallbackGenerator = () => ({
     tiktokHook: `Stop scrolling if you need a better way to handle ${effectiveTitle}!`,
@@ -44,6 +54,7 @@ Return pure JSON matching this exact structure:
     shopifySeo: {
       metaTitle: `${effectiveTitle} - Trending Must-Have`,
       metaDescription: `Discover the all-new ${effectiveTitle}. High durability, exceptional design, and fast shipping.`,
+      keywords: [effectiveTitle.toLowerCase(), 'trending', 'deals', 'lifestyle'],
     },
   });
 
@@ -57,6 +68,7 @@ Return pure JSON matching this exact structure:
 
   return {
     ...result.data,
+    productId,
     isFallback: result.isFallback,
     source: result.source,
   };

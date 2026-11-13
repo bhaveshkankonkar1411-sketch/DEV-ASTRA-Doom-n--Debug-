@@ -110,6 +110,7 @@ async function runEndpointTests() {
     assert(typeof marketingData.instagramCaption === 'string' && marketingData.instagramCaption.includes('#'), 'Instagram caption contains hashtags');
     assert(typeof marketingData.adScript === 'string' && marketingData.adScript.length > 0, 'Short video ad script generated');
     assert(marketingData.shopifySeo && typeof marketingData.shopifySeo.metaTitle === 'string', 'Shopify SEO metaTitle generated');
+    assert(Array.isArray(marketingData.shopifySeo?.keywords) && marketingData.shopifySeo.keywords.length > 0, 'Shopify SEO keywords array generated');
 
     // -------------------------------------------------------------------------
     // Task T-024: Goal Recovery Assistant (POST /api/goals/recovery-assistant)

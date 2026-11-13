@@ -108,11 +108,22 @@ export const validateMarketingContentOutput = (data) => {
   if (!instagramCaption) errors.push('Missing instagramCaption');
   if (!adScript) errors.push('Missing adScript');
 
+  let shopifySeo = null;
+  if (data.shopifySeo && typeof data.shopifySeo === 'object') {
+    shopifySeo = {
+      metaTitle: sanitizeInputText(data.shopifySeo.metaTitle || ''),
+      metaDescription: sanitizeInputText(data.shopifySeo.metaDescription || ''),
+      keywords: Array.isArray(data.shopifySeo.keywords)
+        ? data.shopifySeo.keywords.map((k) => sanitizeInputText(String(k))).filter(Boolean)
+        : [],
+    };
+  }
+
   const validatedData = {
     tiktokHook,
     instagramCaption,
     adScript,
-    shopifySeo: data.shopifySeo || null,
+    shopifySeo,
     generatedBy: data.generatedBy || 'gemini',
     isAiGenerated: true,
     generatedAt: new Date().toISOString(),
