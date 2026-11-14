@@ -323,3 +323,190 @@ textarea:focus {
   background: linear-gradient(180deg, #FFFFFF, #FFFBF8) !important;
   border-color: #E8DED8 !important;
 }
+
+/* Obsidian mode: preserve warm brand depth without forcing light surfaces. */
+:root[data-theme=dark],
+:root[data-theme=dark] body,
+:root[data-theme=dark] #root,
+:root[data-theme=dark] .app-shell,
+:root[data-theme=dark] .main-shell {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 90, 31, .1) 0%, transparent 38%),
+    radial-gradient(circle at 86% 18%, rgba(245, 158, 11, .06) 0%, transparent 42%),
+    #0B0B0D;
+  color: var(--text);
+}
+
+:root[data-theme=dark] .sidebar {
+  background: linear-gradient(180deg, #121216 0%, #0E0E11 100%);
+  border-color: #2D2D34;
+}
+
+:root[data-theme=dark] .topbar {
+  background: linear-gradient(180deg, rgba(24,24,28,.96), rgba(16,16,19,.94));
+  border-color: #303037;
+}
+
+:root[data-theme=dark] .auth-shell {
+  background:
+    radial-gradient(circle at 10% 18%, rgba(255,90,31,.13), transparent 34%),
+    radial-gradient(circle at 88% 12%, rgba(245,158,11,.08), transparent 38%),
+    linear-gradient(145deg, #0B0B0D 0%, #111114 58%, #18110E 100%);
+}
+
+:root[data-theme=dark] .panel,
+:root[data-theme=dark] .glass,
+:root[data-theme=dark] .workspace-switch,
+:root[data-theme=dark] .profile-menu,
+:root[data-theme=dark] .modal,
+:root[data-theme=dark] .toast {
+  background:
+    radial-gradient(130px circle at calc(100% - 36px) 36px, rgba(255,106,43,.08), transparent 100%),
+    linear-gradient(180deg, #1B1B20 0%, #17171B 52%);
+  border-color: #303037;
+}
+
+:root[data-theme=dark] .kpi {
+  background:
+    radial-gradient(135px circle at calc(100% - 36px) 36px, rgba(255,106,43,.13), transparent 100%),
+    linear-gradient(180deg, #1C1C21 0%, #17171B 52%);
+  border-color: #34343B;
+}
+
+:root[data-theme=dark] .kpi:hover {
+  background:
+    radial-gradient(155px circle at calc(100% - 36px) 36px, rgba(255,106,43,.2), transparent 100%),
+    linear-gradient(180deg, #211A17 0%, #18181C 54%);
+  border-color: #8F492C;
+  box-shadow: 0 20px 48px -24px rgba(255,90,31,.35);
+}
+
+:root[data-theme=dark] .metric-orb,
+:root[data-theme=dark] .violet.metric-orb,
+:root[data-theme=dark] .mint.metric-orb,
+:root[data-theme=dark] .blue.metric-orb,
+:root[data-theme=dark] .peach.metric-orb {
+  background: linear-gradient(135deg, #302018, #241812);
+  border-color: #563324;
+  color: #FF9A66;
+}
+
+:root[data-theme=dark] .mint.metric-orb { background: linear-gradient(135deg, #292311, #211D10); color: #FBBF24; border-color: #51431B; }
+:root[data-theme=dark] .blue.metric-orb { background: linear-gradient(135deg, #2D1D13, #231710); color: #FB923C; border-color: #59321C; }
+:root[data-theme=dark] .peach.metric-orb { background: linear-gradient(135deg, #30171B, #251317); color: #FB7185; border-color: #5B2932; }
+
+:root[data-theme=dark] .nav-indicator,
+:root[data-theme=dark] .sidebar nav button.active {
+  background: linear-gradient(90deg, rgba(255,90,31,.2), rgba(255,90,31,.07) 68%, transparent 100%);
+  border-color: #563324;
+  border-left-color: #FF6A2B;
+  color: #FFFFFF;
+}
+
+:root[data-theme=dark] .secondary,
+:root[data-theme=dark] .text-button {
+  background: linear-gradient(135deg, #202025 0%, #18181C 100%);
+  border-color: #383840;
+  color: #E7E7EA;
+}
+
+:root[data-theme=dark] .secondary:hover,
+:root[data-theme=dark] .text-button:hover {
+  background: linear-gradient(135deg, #2A1C17 0%, #211713 100%);
+  border-color: #74402A;
+  color: #FFB08A;
+}
+
+:root[data-theme=dark] .segmented,
+:root[data-theme=dark] .workspace-switch {
+  background: linear-gradient(135deg, #101013, #19191E);
+  border-color: #303037;
+}
+
+:root[data-theme=dark] .segmented .selected {
+  background: linear-gradient(135deg, #342018, #261814);
+  color: #FFAD82;
+}
+
+:root[data-theme=dark] .badge,
+:root[data-theme=dark] .action-count,
+:root[data-theme=dark] .ai-tag,
+:root[data-theme=dark] .status-pill {
+  background: linear-gradient(135deg, #2F1D16 0%, #251713 100%);
+  border-color: #5B3423;
+  color: #FFAD82;
+}
+
+:root[data-theme=dark] .badge.positive,
+:root[data-theme=dark] .kpi-bottom > span,
+:root[data-theme=dark] .form-message {
+  background: linear-gradient(135deg, #102724, #11201F);
+  color: #5EEAD4;
+  border-color: #245B55;
+}
+
+:root[data-theme=dark] input,
+:root[data-theme=dark] select,
+:root[data-theme=dark] textarea,
+:root[data-theme=dark] .recovery-advisor .form-input {
+  background: linear-gradient(180deg, #121216 0%, #17171B 100%) !important;
+  border-color: #34343B !important;
+  color: #F7F7F8;
+}
+
+:root[data-theme=dark] .home-stage-shell {
+  background:
+    radial-gradient(50% 50% at 50% 50%, rgba(255,106,43,.17) 0%, rgba(42,26,20,.28) 55%, transparent 100%),
+    linear-gradient(180deg, #111114, #0B0B0D);
+}
+
+:root[data-theme=dark] .home-module,
+:root[data-theme=dark] .floating-chip {
+  background: linear-gradient(145deg, rgba(29,29,34,.98), rgba(21,21,25,.96));
+  border-color: #3A3432;
+}
+
+:root[data-theme=dark] .revenue-panel,
+:root[data-theme=dark] .goal-panel {
+  background:
+    radial-gradient(circle at 86% 10%, rgba(245,158,11,.08), transparent 34%),
+    linear-gradient(180deg, #1B1B20 0%, #17171B 50%);
+}
+
+:root[data-theme=dark] .ring-track { stroke: #2B211D; }
+
+:root[data-theme=dark] .plan-card {
+  background:
+    radial-gradient(circle at 95% 4%, rgba(245,158,11,.13), transparent 42%),
+    linear-gradient(145deg, #241914 0%, #1C1512 100%);
+  border-color: #493025;
+}
+
+:root[data-theme=dark] .opportunity-spotlight,
+:root[data-theme=dark] .sentiment-inspector,
+:root[data-theme=dark] .preview-seo,
+:root[data-theme=dark] .ai-advice-card,
+:root[data-theme=dark] .product-opportunity-summary {
+  background:
+    radial-gradient(circle at 94% 4%, rgba(245,158,11,.1), transparent 42%),
+    linear-gradient(145deg, #211915 0%, #17171B 70%) !important;
+  border-color: #533427 !important;
+  color: #F7F7F8;
+}
+
+:root[data-theme=dark] .opportunity-spotlight p,
+:root[data-theme=dark] .product-opportunity-summary > div:nth-child(2),
+:root[data-theme=dark] .product-opportunity-summary > p {
+  color: #B8B0AB !important;
+}
+
+:root[data-theme=dark] .recovery-action {
+  background: linear-gradient(135deg, #102724 0%, #18181C 100%) !important;
+  border-color: #245B55;
+}
+
+:root[data-theme=dark] .form-error {
+  background: linear-gradient(135deg, #30161B, #251317);
+  color: #FDA4AF !important;
+  border-color: #5B2932;
+}

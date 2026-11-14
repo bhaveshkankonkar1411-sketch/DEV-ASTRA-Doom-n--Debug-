@@ -17,6 +17,20 @@ export const productImages = [
   'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=600&q=80',
   'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80'
 ];
+
+const designatedProductImages = [
+  { keywords: ['sunset', 'lamp'], image: '/assets/products/sunset-projection-lamp.png' },
+  { keywords: ['neck', 'fan'], image: '/assets/products/bladeless-neck-fan.png' },
+  { keywords: ['espresso'], image: '/assets/products/portable-espresso-maker.png' },
+  { keywords: ['pet', 'groom'], image: '/assets/products/pet-grooming-brush.png' },
+  { keywords: ['posture'], image: '/assets/products/smart-posture-corrector.png' }
+];
+
+function designatedImageFor(product) {
+  const identity = `${product?.id || ''} ${product?.name || ''} ${product?.title || ''}`.toLowerCase();
+  return designatedProductImages.find(({ keywords }) => keywords.every(keyword => identity.includes(keyword)))?.image;
+}
+
 export const products = [
   ['therapy-mask', 'Portable LED Therapy Facial Mask', 'Beauty technology', 1240, 2899, 92, 1840, 'Trending'],
   ['charging-stand', 'Magnetic Wireless Fast-Charging Desk Stand', 'Mobile accessories', 690, 1799, 90, 2650, 'High demand'],
@@ -178,6 +192,6 @@ export function ProductArt({
   small = false
 }) {
   const seed = String(product.id || product.name || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  const image = product.image || productImages[seed % productImages.length];
+  const image = designatedImageFor(product) || product.image || productImages[seed % productImages.length];
   return <div className={`product-art product-photo ${product.color || ''} ${small ? 'small' : ''}`}><img src={image} alt={product.name} loading="lazy" referrerPolicy="no-referrer" /></div>;
 }
