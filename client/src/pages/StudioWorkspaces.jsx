@@ -184,22 +184,22 @@ export function Discovery({
       <p><b>Hugging Face Semantic Search Active (`sentence-transformers/all-MiniLM-L6-v2`)</b>: Matches products by conceptual meaning and dense vector distance rather than exact substring matching.</p>
     </div>}
     {sort === 'opportunity' && topExplanation && (
-      <div className="panel" style={{ marginBottom: '16px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08))', border: '1px solid rgba(139, 92, 246, 0.35)' }}>
+      <div className="panel" style={{ marginBottom: '16px', background: 'var(--canvas-subtle)', border: '1.5px solid var(--line)' }}>
         <div className="section-head" style={{ marginBottom: '8px' }}>
           <span className="badge positive">⭐ AI Opportunity Spotlight · Score: {topExplanation.score}/100</span>
           <span className="badge">Grounded by Gemini & ML Scoring Engine</span>
         </div>
         <h3 style={{ margin: '0 0 6px 0', fontSize: '1.15rem' }}>{topExplanation.headline || topExplanation.productName}</h3>
-        <p style={{ margin: '0 0 10px 0', fontSize: '0.92rem', color: 'var(--text-secondary, #cbd5e1)' }}>{topExplanation.explanation}</p>
+        <p style={{ margin: '0 0 10px 0', fontSize: '0.92rem', color: 'var(--muted)' }}>{topExplanation.explanation}</p>
         {Array.isArray(topExplanation.keyStrengths) && topExplanation.keyStrengths.length > 0 && (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
             {topExplanation.keyStrengths.map((strength, i) => (
-              <span key={i} className="badge" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>✓ {strength}</span>
+              <span key={i} className="badge" style={{ background: 'var(--canvas-subtle)', borderColor: 'var(--line)' }}>✓ {strength}</span>
             ))}
           </div>
         )}
         {topExplanation.actionTip && (
-          <div style={{ fontSize: '0.85rem', color: '#a78bfa' }}>
+          <div style={{ fontSize: '0.85rem', color: '#C75B00', fontWeight: 600 }}>
             <b>Recommended Action:</b> {topExplanation.actionTip}
           </div>
         )}
@@ -218,14 +218,15 @@ export function Discovery({
     </div>
     <div className="product-grid">{list.map(product => <article key={product.id} className="panel product-card">
       <ProductArt product={product} /><div className="product-content">
-        <div className="section-head">
-          <span className={`badge ${product.opportunityScore != null || product.similarityScore != null ? 'positive' : ''}`}>
-            {product.opportunityScore != null ? `⭐ ${product.opportunityScore}/100 Opportunity` : product.similarityScore != null ? `⚡ ${product.similarityScore}% Match` : (product.sourceLabel?.replaceAll('_', ' ') || product.trend)}
+        <div className="card-top-bar">
+          <span className="compact-badge">
+            {product.sourceLabel ? product.sourceLabel.replaceAll('_', ' ') : (product.trend || 'Trending')}
           </span>
-          <strong className="positive-text">
-            {product.opportunityScore != null ? `${product.opportunityScore}` : product.similarityScore != null ? `${product.similarityScore}%` : `${product.score}`}
-            <small>{product.opportunityScore != null ? ' opp' : product.similarityScore != null ? ' match' : '/100'}</small>
-          </strong>
+          <div className="score-pill">
+            <span className="score-star">★</span>
+            <span className="score-num">{product.opportunityScore != null ? product.opportunityScore : product.score}</span>
+            <span className="score-max">/100</span>
+          </div>
         </div>
         <h2>{product.name}</h2><p>{product.category} · {product.trend || 'Trending'}</p>
         <div className="product-prices"><span>Estimated cost<b>{money(product.cost)}</b></span><span>Suggested retail<b>{money(product.price)}</b></span></div>
@@ -268,13 +269,13 @@ export function ProductSentimentInspector({ productId, productName }) {
   };
 
   return (
-    <div className="sentiment-inspector" style={{ marginTop: '16px', padding: '14px', borderRadius: '10px', background: 'var(--panel-hover, rgba(255,255,255,0.03))', border: '1px solid var(--border, rgba(255,255,255,0.08))' }}>
+    <div className="sentiment-inspector" style={{ marginTop: '16px', padding: '16px', borderRadius: '16px', background: 'var(--canvas-subtle)', border: '1.5px solid var(--line)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <strong style={{ fontSize: '0.88rem', color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <strong style={{ fontSize: '0.88rem', color: '#C75B00', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Icon name="spark" size={15} /> Customer Feedback Sentiment (RoBERTa AI)
         </strong>
         {!sentiment && (
-          <button type="button" className="secondary" disabled={loading} style={{ fontSize: '0.78rem', padding: '5px 10px' }} onClick={analyze}>
+          <button type="button" className="secondary" disabled={loading} style={{ fontSize: '0.78rem', padding: '6px 12px', minHeight: '34px' }} onClick={analyze}>
             {loading ? 'Analyzing with RoBERTa…' : 'Inspect Reviews'}
           </button>
         )}
@@ -283,31 +284,31 @@ export function ProductSentimentInspector({ productId, productName }) {
       {error && <p className="form-error" style={{ marginTop: '8px' }}>{error}</p>}
 
       {sentiment && !sentiment.sentimentAvailable && (
-        <p style={{ marginTop: '8px', fontSize: '0.82rem', color: 'var(--muted, #94a3b8)' }}>
+        <p style={{ marginTop: '8px', fontSize: '0.82rem', color: 'var(--muted)' }}>
           ℹ️ {sentiment.message}
         </p>
       )}
 
       {sentiment && sentiment.sentimentAvailable && (
-        <div style={{ marginTop: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+        <div style={{ marginTop: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span className={`badge ${sentiment.overallLabel === 'POSITIVE' ? 'positive' : sentiment.overallLabel === 'NEGATIVE' ? 'negative' : 'warning'}`}>
               {sentiment.overallLabel}: {sentiment.sentimentScore}% Positive
             </span>
-            <small style={{ color: 'var(--muted, #94a3b8)' }}>
+            <small style={{ color: 'var(--muted)', fontWeight: 600 }}>
               {sentiment.analyzedReviewsCount} verified reviews analyzed
             </small>
           </div>
-          <div style={{ height: '6px', width: '100%', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden', display: 'flex', margin: '8px 0' }}>
-            <div style={{ width: `${sentiment.positivePercent}%`, background: '#10b981' }} title={`Positive: ${sentiment.positivePercent}%`} />
-            <div style={{ width: `${sentiment.neutralPercent}%`, background: '#94a3b8' }} title={`Neutral: ${sentiment.neutralPercent}%`} />
-            <div style={{ width: `${sentiment.negativePercent}%`, background: '#ef4444' }} title={`Negative: ${sentiment.negativePercent}%`} />
+          <div style={{ height: '7px', width: '100%', background: 'rgba(184, 134, 91, 0.15)', borderRadius: '999px', overflow: 'hidden', display: 'flex', margin: '10px 0' }}>
+            <div style={{ width: `${sentiment.positivePercent}%`, background: '#2E9B77' }} title={`Positive: ${sentiment.positivePercent}%`} />
+            <div style={{ width: `${sentiment.neutralPercent}%`, background: '#A49788' }} title={`Neutral: ${sentiment.neutralPercent}%`} />
+            <div style={{ width: `${sentiment.negativePercent}%`, background: '#E05252' }} title={`Negative: ${sentiment.negativePercent}%`} />
           </div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--muted, #cbd5e1)', marginTop: '4px' }}>
+          <p style={{ fontSize: '0.86rem', color: 'var(--text)', marginTop: '6px', fontWeight: 500 }}>
             {sentiment.summary?.replace(/\s*\(lexicon analyzed\)\.?/i, '.') || `${sentiment.sentimentScore}% positive sentiment across ${sentiment.analyzedReviewsCount} verified customer reviews.`}
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-            <span className="badge" style={{ fontSize: '0.72rem', background: 'rgba(167, 139, 250, 0.15)', color: '#c084fc' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+            <span className="badge" style={{ fontSize: '0.74rem', background: 'var(--canvas-subtle)', color: '#C75B00', borderColor: 'var(--line)' }}>
               ✦ RoBERTa Sentiment AI · CardiffNLP
             </span>
           </div>
@@ -445,9 +446,11 @@ export function ListingStudio({
             const primaryText = d.adScript || d.facebook?.primaryText || d.primaryText || d.instagramCaption || '';
             text = `📢 Headline: ${headline}\n\n📝 Primary Text & Ad Script:\n${primaryText}`;
           } else {
-            const metaTitle = d.shopifySeo?.metaTitle || d.seoTitle || productTitle;
-            const metaDescription = d.shopifySeo?.metaDescription || d.metaDescription || '';
-            const keywords = (d.shopifySeo?.keywords || d.keywords || []).join(', ');
+            let metaTitle = d.shopifySeo?.metaTitle || d.seoTitle || productTitle;
+            let metaDescription = d.shopifySeo?.metaDescription || d.metaDescription || d.seoDescription || '';
+            let keywords = Array.isArray(d.shopifySeo?.keywords || d.keywords)
+              ? (d.shopifySeo?.keywords || d.keywords).join(', ')
+              : (d.shopifySeo?.keywords || d.keywords || '');
             text = `Meta Title: ${metaTitle}\n\nMeta Description:\n${metaDescription}\n\nKeywords: ${keywords}`;
           }
 
@@ -455,9 +458,40 @@ export function ListingStudio({
             text = d.adScript || d.instagramCaption || d.tiktokHook || 'Generated marketing copy ready for review.';
           }
 
+          let extractedSeoTitle = d.shopifySeo?.metaTitle || d.seoTitle || productTitle;
+          let extractedSeoDescription = d.shopifySeo?.metaDescription || d.metaDescription || d.seoDescription || '';
+          let extractedKeywords = Array.isArray(d.shopifySeo?.keywords || d.keywords)
+            ? (d.shopifySeo?.keywords || d.keywords).join(', ')
+            : (d.shopifySeo?.keywords || d.keywords || '');
+
+          // Text parse fallbacks if Gemini returned formatted text in description
+          if (!extractedSeoTitle || extractedSeoTitle === productTitle) {
+            const mTitle = text.match(/Meta Title:\s*([^\n]+)/i);
+            if (mTitle) extractedSeoTitle = mTitle[1].trim();
+          }
+          if (!extractedSeoDescription) {
+            const mDesc = text.match(/Meta Description:\s*\n*([^\n]+(?:\n[^\n]+)?)/i);
+            if (mDesc && !mDesc[1].toLowerCase().startsWith('keywords:')) {
+              extractedSeoDescription = mDesc[1].trim();
+            } else {
+              extractedSeoDescription = text.slice(0, 155);
+            }
+          }
+          if (!extractedKeywords) {
+            const mKey = text.match(/Keywords:\s*([^\n]+)/i);
+            if (mKey) {
+              extractedKeywords = mKey[1].trim();
+            } else {
+              extractedKeywords = `${productTitle.toLowerCase()}, trending, best deals, online shopping`;
+            }
+          }
+
           setDraft({
             title: `${channel}: ${productTitle}`,
-            description: text
+            description: text,
+            seoTitle: extractedSeoTitle,
+            seoDescription: extractedSeoDescription,
+            keywords: extractedKeywords
           });
         } else {
           const res = await listingService.generateListing({
@@ -492,13 +526,13 @@ export function ListingStudio({
       setBusy(false);
     }
   };
-  return <><PageHead eyebrow={content ? 'One product. Many possibilities.' : 'From product to possibility'} title={content ? 'Make every channel your own.' : 'A listing worth stopping for.'} description={content ? 'Create channel-specific copy from the product facts you provide.' : 'Turn verified product details into a clear, editable listing.'} /><div className="workspace-grid"><section className="panel"><Field label="Product Name / Title" value={productTitle} onChange={e => setProductTitle(e.target.value)} /><label className="form-field"><span>Product facts, one per line</span><textarea rows="6" value={features} onChange={e => setFeatures(e.target.value)} /></label><Field label="Target audience" value={audience} onChange={e => setAudience(e.target.value)} />{content && <label className="form-field"><span>Channel</span><select value={channel} onChange={e => setChannel(e.target.value)}>{['Instagram', 'TikTok', 'Facebook Ads', 'Shopify SEO'].map(c => <option key={c}>{c}</option>)}</select></label>}<label className="form-field"><span>Generation Engine</span><select value={source} onChange={e => setSource(e.target.value)}><option value="api">Google Gemini AI Model</option><option value="local">Fast Local Template</option></select></label><button className="primary full" disabled={busy || !features.trim() || !audience.trim()} onClick={generate}><Icon name="spark" />{busy ? 'Generating with AI…' : content ? 'Create channel copy' : 'Generate listing'}</button><p className="footnote">{source === 'local' ? 'Built from your facts using a local template.' : 'Powered by Google Gemini API & server generation.'}</p></section><section className="panel"><div className="section-head"><h2>{preview ? 'Listing preview' : 'Your creative canvas'}</h2>{draft && <span className="badge positive">Saved on this device</span>}</div>{draft ? <><div className="segmented draft-tabs"><button className={!preview ? 'selected' : ''} onClick={() => setPreview(false)}>Edit draft</button><button className={preview ? 'selected' : ''} onClick={() => setPreview(true)}>Preview</button></div>{preview ? <article className="draft-preview"><h2>{draft.title}</h2><p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{draft.description}</p>{draft.seoTitle && <div className="preview-seo" style={{ marginTop: '18px', padding: '14px', background: 'var(--panel-hover, rgba(255,255,255,0.04))', borderRadius: '10px', borderLeft: '3px solid #8b5cf6' }}><h4 style={{ fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#a78bfa', marginBottom: '6px' }}>Google & Shopify SEO Preview</h4><strong style={{ fontSize: '1.05rem', color: '#60a5fa' }}>{draft.seoTitle}</strong><p style={{ fontSize: '0.88rem', color: 'var(--muted, #94a3b8)', marginTop: '4px' }}>{draft.seoDescription}</p>{draft.keywords && <small style={{ color: '#818cf8', display: 'block', marginTop: '6px' }}>🔑 Keywords: {draft.keywords}</small>}</div>}</article> : <><Field label="Title" value={draft.title} onChange={e => setDraft({
+  return <><PageHead eyebrow={content ? 'One product. Many possibilities.' : 'From product to possibility'} title={content ? 'Make every channel your own.' : 'A listing worth stopping for.'} description={content ? 'Create channel-specific copy from the product facts you provide.' : 'Turn verified product details into a clear, editable listing.'} /><div className="workspace-grid"><section className="panel"><Field label="Product Name / Title" value={productTitle} onChange={e => setProductTitle(e.target.value)} /><label className="form-field"><span>Product facts, one per line</span><textarea rows="6" value={features} onChange={e => setFeatures(e.target.value)} /></label><Field label="Target audience" value={audience} onChange={e => setAudience(e.target.value)} />{content && <label className="form-field"><span>Channel</span><select value={channel} onChange={e => setChannel(e.target.value)}>{['Instagram', 'TikTok', 'Facebook Ads', 'Shopify SEO'].map(c => <option key={c}>{c}</option>)}</select></label>}<label className="form-field"><span>Generation Engine</span><select value={source} onChange={e => setSource(e.target.value)}><option value="api">Google Gemini AI Model</option><option value="local">Fast Local Template</option></select></label><button className="primary full" disabled={busy || !features.trim() || !audience.trim()} onClick={generate}><Icon name="spark" />{busy ? 'Generating with AI…' : content ? 'Create channel copy' : 'Generate listing'}</button><p className="footnote">{source === 'local' ? 'Built from your facts using a local template.' : 'Powered by Google Gemini API & server generation.'}</p></section><section className="panel"><div className="section-head"><h2>{preview ? 'Listing preview' : 'Your creative canvas'}</h2>{draft && <span className="badge positive">Saved on this device</span>}</div>{draft ? <><div className="segmented draft-tabs"><button className={!preview ? 'selected' : ''} onClick={() => setPreview(false)}>Edit draft</button><button className={preview ? 'selected' : ''} onClick={() => setPreview(true)}>Preview</button></div>{preview ? <article className="draft-preview"><h2>{draft.title}</h2><p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{draft.description}</p>{draft.seoTitle && <div className="preview-seo" style={{ marginTop: '18px', padding: '16px', background: 'var(--canvas-subtle)', borderRadius: '16px', borderLeft: '4px solid var(--accent)' }}><h4 style={{ fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#C75B00', marginBottom: '6px', fontWeight: 800 }}>Google & Shopify SEO Preview</h4><strong style={{ fontSize: '1.05rem', color: 'var(--text)' }}>{draft.seoTitle}</strong><p style={{ fontSize: '0.88rem', color: 'var(--muted)', marginTop: '4px' }}>{draft.seoDescription}</p>{draft.keywords && <small style={{ color: '#C75B00', display: 'block', marginTop: '6px', fontWeight: 600 }}>🔑 Keywords: {draft.keywords}</small>}</div>}</article> : <><Field label="Title" value={draft.title} onChange={e => setDraft({
               ...draft,
               title: e.target.value
             })} /><label className="form-field"><span>Description</span><textarea rows="8" value={draft.description} onChange={e => setDraft({
                 ...draft,
                 description: e.target.value
-              })} /></label><div className="seo-edit-section" style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border, rgba(255,255,255,0.08))' }}><h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--accent, #a78bfa)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}><Icon name="spark" size={16} /> SEO Search Optimization</h3><Field label="SEO Meta Title (Under 60 chars)" value={draft.seoTitle || ''} onChange={e => setDraft({ ...draft, seoTitle: e.target.value })} /><label className="form-field"><span>SEO Meta Description (Under 155 chars)</span><textarea rows="3" value={draft.seoDescription || ''} onChange={e => setDraft({ ...draft, seoDescription: e.target.value })} /></label><Field label="Target Keywords (comma-separated)" value={draft.keywords || ''} onChange={e => setDraft({ ...draft, keywords: e.target.value })} /></div></>}<div className="button-row"><button className="secondary" onClick={async () => {
+              })} /></label><div className="seo-edit-section" style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1.5px solid var(--line)' }}><h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#C75B00', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}><Icon name="spark" size={16} /> SEO Search Optimization</h3><Field label="SEO Meta Title (Under 60 chars)" value={draft.seoTitle || ''} onChange={e => setDraft({ ...draft, seoTitle: e.target.value })} /><label className="form-field"><span>SEO Meta Description (Under 155 chars)</span><textarea rows="3" value={draft.seoDescription || ''} onChange={e => setDraft({ ...draft, seoDescription: e.target.value })} /></label><Field label="Target Keywords (comma-separated)" value={draft.keywords || ''} onChange={e => setDraft({ ...draft, keywords: e.target.value })} /></div></>}<div className="button-row"><button className="secondary" onClick={async () => {
               try {
                 const fullText = `${draft.title}\n\n${draft.description}${draft.seoTitle ? `\n\n--- SEO METADATA ---\nSEO Title: ${draft.seoTitle}\nSEO Description: ${draft.seoDescription || ''}\nKeywords: ${draft.keywords || ''}` : ''}`;
                 await navigator.clipboard.writeText(fullText);
@@ -588,7 +622,7 @@ export function Goals({
     <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
       <input
         className="form-input"
-        style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', background: 'var(--panel-hover, rgba(255,255,255,0.05))', border: '1px solid var(--border, rgba(255,255,255,0.1))', color: 'inherit' }}
+        style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', background: 'var(--input, #FFF5E6)', border: '1.5px solid var(--line, #EED5B5)', color: 'inherit' }}
         value={userQuery}
         onChange={e => setUserQuery(e.target.value)}
         placeholder="Ask Gemini recovery question..."
@@ -601,9 +635,9 @@ export function Goals({
     {aiError && <p className="form-error" role="alert">{aiError}</p>}
 
     {aiAdvice && (
-      <div className="ai-advice-card" style={{ marginTop: '16px', padding: '16px', background: 'var(--panel-hover, rgba(255,255,255,0.03))', borderRadius: '12px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+      <div className="ai-advice-card" style={{ marginTop: '16px', padding: '18px', background: 'var(--canvas-subtle)', borderRadius: '16px', border: '1.5px solid var(--line)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <strong style={{ color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <strong style={{ color: '#C75B00', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 800 }}>
             <Icon name="spark" size={16} /> Gemini Strategic Diagnosis
           </strong>
           {aiAdvice.source && (
@@ -633,7 +667,7 @@ export function Goals({
             <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--muted, #94a3b8)', marginBottom: '8px' }}>Action Plan</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {aiAdvice.suggestedActions.map((a, i) => (
-                <div key={i} style={{ padding: '10px 12px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', borderLeft: '3px solid #10b981' }}>
+                <div key={i} style={{ padding: '10px 12px', background: 'var(--panel)', borderRadius: '8px', border: '1px solid var(--line)', borderLeft: '3px solid #10b981' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <strong>{a.action}</strong>
                     {a.confidence && (
@@ -650,7 +684,7 @@ export function Goals({
         )}
 
         {aiAdvice.limitations && aiAdvice.limitations.length > 0 && (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '10px' }}>
+          <div style={{ borderTop: '1px solid var(--line)', paddingTop: '10px', marginTop: '10px' }}>
             <small style={{ color: 'var(--muted, #64748b)' }}>
               Limitations: {aiAdvice.limitations.join(' • ')}
             </small>

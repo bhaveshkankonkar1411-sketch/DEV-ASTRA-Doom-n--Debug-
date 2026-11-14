@@ -1,22 +1,22 @@
 .planner-section { margin-top: 24px; }
-.planner-status { margin-bottom: 18px; color: var(--accent); }
+.planner-status { margin-bottom: 18px; color: var(--accent-dark); font-weight: 600; }
 .planner-milestones { list-style: none; padding: 0; margin: 24px 0; }
-.planner-milestones li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.planner-milestones li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid var(--line); font-size: 15px; }
 .planner-milestones li span { color: var(--muted); }
 .csv-schema { margin: 22px 0; }
-.csv-schema summary, .csv-report summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 10px 0; }
+.csv-schema summary, .csv-report summary { cursor: pointer; color: var(--accent-dark); font-weight: 700; padding: 10px 0; }
 .csv-schema ul, .csv-report ul { padding-left: 22px; line-height: 1.9; color: var(--muted); }
 .csv-errors { max-height: 240px; overflow: auto; }
-.planner-table { overflow-x: auto; margin: 24px 0; }
-.planner-table table { width: 100%; min-width: 680px; border-collapse: collapse; text-align: left; font-size: 15px; }
-.planner-table caption { text-align: left; color: var(--muted); margin-bottom: 12px; }
-.planner-table th { color: var(--muted); font-weight: 600; }
-.planner-table td, .planner-table th { padding: 14px 12px; border-bottom: 1px solid var(--line); }
-.planner-table td:first-child { min-width: 180px; }
+.planner-table { overflow-x: auto; margin: 24px 0; border: 1.5px solid var(--line); border-radius: var(--radius-md); background: var(--panel); }
+.planner-table table { width: 100%; min-width: 680px; border-collapse: collapse; text-align: left; font-size: 14.5px; }
+.planner-table caption { text-align: left; color: var(--muted); padding: 16px 18px 0; font-weight: 600; }
+.planner-table th { color: var(--muted); font-weight: 700; background: var(--canvas-subtle); padding: 14px 16px; border-bottom: 1.5px solid var(--line); }
+.planner-table td { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.planner-table td:first-child { min-width: 180px; font-weight: 600; }
 .financial-breakdown { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 24px 0 0; }
-.financial-breakdown div { padding: 18px; border: 1px solid var(--line); border-radius: 14px; }
-.financial-breakdown dt { font-size: 15px; color: var(--muted); }
-.financial-breakdown dd { margin: 8px 0 0; font-size: 24px; font-weight: 650; overflow-wrap: anywhere; }
+.financial-breakdown div { padding: 20px; border: 1.5px solid var(--line); border-radius: var(--radius-md); background: var(--panel); box-shadow: var(--shadow-sm); }
+.financial-breakdown dt { font-size: 14px; font-weight: 600; color: var(--muted); }
+.financial-breakdown dd { margin: 8px 0 0; font-family: var(--font-heading); font-size: 26px; font-weight: 800; color: var(--text); overflow-wrap: anywhere; }
 .csv-report .sync-row { align-items: flex-start; line-height: 1.6; }
 .csv-report .sync-row input { flex-shrink: 0; margin-top: 4px; }
 .planner-section .form-error p { color: inherit; }
