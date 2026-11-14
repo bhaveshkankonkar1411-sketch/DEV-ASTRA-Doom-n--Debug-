@@ -7,7 +7,9 @@ import { GoalRing, RevenueChart } from './components/charts/StudioCharts';
 import { Discovery, Goals, ListingStudio, ProductSentimentInspector, Shopify, SupplierComparison } from './pages/StudioWorkspaces';
 import Pricing from './pages/SmartPricingPage';
 import ProfitGoalPlannerPage from './pages/ProfitGoalPlannerPage';
+import HomeLaunchpad from './pages/HomeLaunchpad';
 import './styles/App.css';
+import './styles/Launchpad.css';
 function Brand() {
   return <div className="brand"><span className="brand-mark"><Icon name="spark" size={27} /></span><span>DropPilot<span className="brand-ai">AI</span><small>Your unfair advantage.</small></span></div>;
 }
@@ -211,7 +213,7 @@ export default function App() {
   } = useAuth();
   const [theme, setTheme] = useStored('droppilot_theme', 'light'),
     [target, setTarget] = useStored('droppilot_target', 62500);
-  const [page, setPage] = useState('overview'),
+  const [page, setPage] = useState('home'),
     [menu, setMenu] = useState(false),
     [modal, setModal] = useState(null),
     [profile, setProfile] = useState(false),
@@ -277,10 +279,10 @@ export default function App() {
                 setProfile(false);
                 if (action === 'theme') setTheme(theme === 'light' ? 'dark' : 'light');else if (action === 'logout') {
                   setModal(null);
-                  setPage('overview');
+                  setPage('home');
                   logout();
                 } else setModal(action);
-              }}><Icon name={icon} size={18} />{label}</button>)}</div>}</div></div></header><main id="workspace" className="workspace" tabIndex="-1"><div className="page-enter" key={page}>{page === 'overview' && <Overview user={user} target={safeTarget} onNavigate={navigate} onDiscover={() => setModal('discover')} onGoal={() => setModal('goal')} onSelect={select} />} {page === 'discover' && <Discovery onSelect={select} />} {page === 'pricing' && <Pricing key={selected.id} product={selected} />} {page === 'suppliers' && <SupplierComparison product={selected} notify={notify} />} {(page === 'listing' || page === 'content') && <ListingStudio key={page + selected.id} product={selected} content={page === 'content'} notify={notify} user={user} />} {page === 'shopify' && <Shopify notify={notify} />} {page === 'goals' && <ProfitGoalPlannerPage />} {page === 'recovery' && <Goals target={safeTarget} onEdit={() => setModal('goal')} recovery={page === 'recovery'} onNavigate={navigate} />}</div></main></div>{modal && <Modal title={{
+              }}><Icon name={icon} size={18} />{label}</button>)}</div>}</div></div></header><main id="workspace" className="workspace" tabIndex="-1"><div className="page-enter" key={page}>{page === 'home' && <HomeLaunchpad user={user} onNavigate={navigate} />} {page === 'overview' && <Overview user={user} target={safeTarget} onNavigate={navigate} onDiscover={() => setModal('discover')} onGoal={() => setModal('goal')} onSelect={select} />} {page === 'discover' && <Discovery onSelect={select} />} {page === 'pricing' && <Pricing key={selected.id} product={selected} />} {page === 'suppliers' && <SupplierComparison product={selected} notify={notify} />} {(page === 'listing' || page === 'content') && <ListingStudio key={page + selected.id} product={selected} content={page === 'content'} notify={notify} user={user} />} {page === 'shopify' && <Shopify notify={notify} />} {page === 'goals' && <ProfitGoalPlannerPage />} {page === 'recovery' && <Goals target={safeTarget} onEdit={() => setModal('goal')} recovery={page === 'recovery'} onNavigate={navigate} />}</div></main></div>{modal && <Modal title={{
       search: 'A little shortcut to everything.',
       profile: 'Make it yours.',
       plan: 'Your workspace plan',

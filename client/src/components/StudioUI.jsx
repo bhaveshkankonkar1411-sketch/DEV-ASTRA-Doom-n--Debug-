@@ -6,7 +6,21 @@ export const money = value => new Intl.NumberFormat('en-IN', {
 }).format(value);
 export const initials = name => (name || 'Drop Pilot').split(' ').filter(Boolean).slice(0, 2).map(s => s[0]).join('').toUpperCase();
 export const plans = ['Starter', 'Growth Plan', 'Enterprise AI'];
-export const navigation = [['overview', 'Overview', 'grid'], ['discover', 'Product discovery', 'compass'], ['listing', 'Listing studio', 'file'], ['suppliers', 'Supplier comparison', 'box'], ['pricing', 'Smart pricing', 'sliders'], ['content', 'Content generator', 'spark'], ['shopify', 'Shopify sync', 'bag'], ['goals', 'Profit goal planner', 'target'], ['recovery', 'Goal recovery', 'pulse']];
+export const navigation = [['home', 'Home', 'home'], ['overview', 'Overview', 'grid'], ['discover', 'Product discovery', 'compass'], ['listing', 'Listing studio', 'file'], ['suppliers', 'Supplier comparison', 'box'], ['pricing', 'Smart pricing', 'sliders'], ['content', 'Content generator', 'spark'], ['shopify', 'Shopify sync', 'bag'], ['goals', 'Profit goal planner', 'target'], ['recovery', 'Goal recovery', 'pulse']];
+export const designatedProductImages = [
+  { keywords: ['neck', 'fan'], image: '/assets/products/bladeless-neck-fan.png' },
+  { keywords: ['posture', 'brace', 'corrector'], image: '/assets/products/smart-posture-corrector.png' },
+  { keywords: ['sunset', 'lamp', 'projector', 'galaxy'], image: '/assets/products/sunset-projection-lamp.png' },
+  { keywords: ['pet', 'glove', 'brush', 'groom'], image: '/assets/products/pet-grooming-brush.png' },
+  { keywords: ['espresso', 'coffee'], image: '/assets/products/portable-espresso-maker.png' }
+];
+
+export function designatedImageFor(product) {
+  if (!product) return null;
+  const identity = `${product.id || ''} ${product.name || ''} ${product.title || ''} ${product.category || ''}`.toLowerCase();
+  const match = designatedProductImages.find(({ keywords }) => keywords.some(keyword => identity.includes(keyword)));
+  return match?.image || product.imageUrl || product.image || null;
+}
 export const products = [{
   id: 'fan',
   name: 'Portable Neck Fan',
@@ -78,6 +92,7 @@ export function Icon({
   ...props
 }) {
   const paths = {
+    home: 'M3 10 12 3l9 7v10h-6v-6H9v6H3z',
     grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
     compass: 'm16 8-3 5-5 3 3-5z M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
     file: 'M14 3H5v18h14V8z M14 3v5h5 M8 12h8 M8 16h6',
@@ -202,5 +217,13 @@ export function ProductArt({
   product,
   small = false
 }) {
-  return <div className={`product-art ${product.color} ${small ? 'small' : ''}`}><Icon name={product.icon} size={small ? 26 : 76} />{!small && <span className="art-orbit" />}</div>;
+  const image = designatedImageFor(product);
+  if (image) {
+    return (
+      <div className={`product-art product-photo ${product?.color || ''} ${small ? 'small' : ''}`}>
+        <img src={image} alt={product?.name || product?.title || 'Product'} loading="lazy" />
+      </div>
+    );
+  }
+  return <div className={`product-art ${product?.color || 'peach'} ${small ? 'small' : ''}`}><Icon name={product?.icon || 'box'} size={small ? 26 : 76} />{!small && <span className="art-orbit" />}</div>;
 }
