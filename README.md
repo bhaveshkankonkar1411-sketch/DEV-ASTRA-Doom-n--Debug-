@@ -12,6 +12,16 @@
 
 ---
 
+> ### 🌐 Live Storefront & Verification Links
+> * **Shopify Admin Products Portal:** [https://admin.shopify.com/store/droppilot-demo-store/products](https://admin.shopify.com/store/droppilot-demo-store/products)
+> * **Live Customer Storefront:** [https://droppilot-demo-store.myshopify.com](https://droppilot-demo-store.myshopify.com)
+> * **Synced Product 1 (Posture Support Brace):** [View Live on Storefront](https://droppilot-demo-store.myshopify.com/products/posture-support-brace)
+> * **Synced Product 2 (Portable Bladeless Neck Fan):** [View Live on Storefront](https://droppilot-demo-store.myshopify.com/products/portable-bladeless-neck-fan-droppilot-ai)
+> * **Storefront Password:** `maigow` (Enter this password when prompted to unlock the live storefront!)
+> * **Connected Shopify Store Domain:** `droppilot-demo-store.myshopify.com`
+
+---
+
 ## 1. Project Overview
 
 Over 90% of beginner dropshippers fail in their first month due to operational fragmentation—juggling separate tools for product hunting, supplier checks, pricing guesswork, ad copy, and store inventory.
