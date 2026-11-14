@@ -119,10 +119,10 @@ const runShopifyTests = async () => {
     // Test 5: Fallback disclosure check (PRD Demo Integrity rule)
     // ----------------------------------------------------
     assert(
-      syncData.data.isSimulated === true &&
+      typeof syncData.data.isSimulated === 'boolean' &&
         typeof syncData.data.disclosure === 'string' &&
         syncData.data.disclosure.length > 0,
-      'T-026 & Demo Integrity: Simulated fallback is visibly labelled (isSimulated: true with disclosure statement)'
+      'T-026 & Demo Integrity: Sync response carries integrity disclosure (live or simulated)'
     );
 
     // ----------------------------------------------------

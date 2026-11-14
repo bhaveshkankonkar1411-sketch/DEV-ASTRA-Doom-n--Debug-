@@ -222,10 +222,14 @@ export function Discovery({
           <span className="compact-badge">
             {product.sourceLabel ? product.sourceLabel.replaceAll('_', ' ') : (product.trend || 'Trending')}
           </span>
-          <div className="score-pill">
-            <span className="score-star">★</span>
-            <span className="score-num">{product.opportunityScore != null ? product.opportunityScore : product.score}</span>
-            <span className="score-max">/100</span>
+          <div className={`score-pill ${product.similarityScore != null ? 'semantic-pill' : ''}`}>
+            <span className="score-star">{product.similarityScore != null ? '⚡' : '★'}</span>
+            <span className="score-num">
+              {product.similarityScore != null
+                ? product.similarityScore
+                : (product.opportunityScore != null ? product.opportunityScore : product.score)}
+            </span>
+            <span className="score-max">{product.similarityScore != null ? '% match' : '/100'}</span>
           </div>
         </div>
         <h2>{product.name}</h2><p>{product.category} · {product.trend || 'Trending'}</p>

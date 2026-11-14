@@ -1607,6 +1607,15 @@ option {
   white-space: nowrap;
 }
 
+.score-pill.semantic-pill {
+  background: #FFF0E0;
+  border-color: #FF963D;
+}
+
+.score-pill.semantic-pill .score-star {
+  color: #FF963D;
+}
+
 .score-star {
   color: #FFC928;
   font-size: 11px;

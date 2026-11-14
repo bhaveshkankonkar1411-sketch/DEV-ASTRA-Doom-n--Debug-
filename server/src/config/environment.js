@@ -11,6 +11,8 @@ export const config = {
   shopify: {
     clientId: process.env.SHOPIFY_CLIENT_ID || '',
     clientSecret: process.env.SHOPIFY_CLIENT_SECRET || '',
+    accessToken: process.env.SHOPIFY_ACCESS_TOKEN || '',
+    shopDomain: process.env.SHOPIFY_SHOP_DOMAIN || 'droppilot-demo-store.myshopify.com',
     scopes: process.env.SHOPIFY_SCOPES || 'read_products,write_products',
     redirectUri: process.env.SHOPIFY_REDIRECT_URI || '',
   },
