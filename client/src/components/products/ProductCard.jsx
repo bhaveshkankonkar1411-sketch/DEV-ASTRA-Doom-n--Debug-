@@ -1,12 +1,17 @@
-import React from 'react';
+export const ProductCard = ({ product, onSelect }) => {
+  if (!product) return null;
 
-export const ProductCard = ({ product }) => {
   return (
-    <div className="product-card">
-      {/* Product card placeholder */}
-      <h3>{product?.name || 'Product Title'}</h3>
-      <p>{product?.category || 'Category'}</p>
-    </div>
+    <article className="panel product-card">
+      <h2>{product.name}</h2>
+      <p>{product.category}</p>
+      {product.price != null && <strong>₹{Number(product.price).toLocaleString('en-IN')}</strong>}
+      {onSelect && (
+        <button className="secondary full" onClick={() => onSelect(product)}>
+          Explore product
+        </button>
+      )}
+    </article>
   );
 };
 

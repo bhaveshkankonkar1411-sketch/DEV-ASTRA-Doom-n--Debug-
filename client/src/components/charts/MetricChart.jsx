@@ -1,14 +1,19 @@
-import React from 'react';
+export const MetricChart = ({ data = [], title = 'Performance metric' }) => {
+  const values = data.map((point) => Number(point.value) || 0);
+  const maximum = Math.max(1, ...values);
 
-export const MetricChart = ({ data, title }) => {
   return (
-    <div className="metric-chart-card">
-      <h4>{title || 'Performance Metric'}</h4>
-      <div className="chart-wrapper">
-        {/* Chart.js integration placeholder */}
-        <p className="chart-placeholder">Chart Data Placeholder</p>
+    <figure className="panel" aria-label={title}>
+      <h2>{title}</h2>
+      <div className="metric-chart" role="img" aria-label={`${title} bar chart`}>
+        {data.map((point, index) => (
+          <div className="metric-chart-column" key={point.label ?? index}>
+            <i style={{ height: `${(values[index] / maximum) * 100}%` }} />
+            <span>{point.label}</span>
+          </div>
+        ))}
       </div>
-    </div>
+    </figure>
   );
 };
 

@@ -5,17 +5,7 @@ export const orderService = {
     const query = new URLSearchParams(params).toString();
     return apiClient(`/orders${query ? `?${query}` : ''}`, { method: 'GET' });
   },
-  importCsv: async (formData) => {
-    const token = localStorage.getItem('token');
-    const response = await fetch('/api/orders/import-csv', {
-      method: 'POST',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-    });
-    return response.json();
-  },
+  importCsv: async (formData) => apiClient('/orders/import-csv', { method: 'POST', body: formData }),
 };
 
 export default orderService;
