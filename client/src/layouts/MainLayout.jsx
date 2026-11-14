@@ -5,11 +5,11 @@ import Footer from '../components/layout/Footer';
 
 export const MainLayout = ({ children }) => {
   return (
-    <div className="layout main-layout">
+    <div className="legacy-layout main-layout">
       <Navbar />
-      <div className="layout-body">
+      <div className="legacy-layout-body">
         <Sidebar />
-        <main className="layout-content">
+        <main className="legacy-layout-content">
           {children}
         </main>
       </div>

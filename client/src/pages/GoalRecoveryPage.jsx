@@ -1,13 +1,6 @@
-import React from 'react';
+import { Goals } from './StudioWorkspaces';
 
-export const GoalRecoveryPage = () => {
-  return (
-    <div className="page goal-recovery-page">
-      <h2>Goal Recovery Assistant</h2>
-      <p>Analyze underperforming targets and receive tactical AI recovery plans grounded in store metrics.</p>
-    </div>
-  );
-};
-
-export default GoalRecoveryPage;
+export default function GoalRecoveryPage({ target, onEdit, onNavigate }) {
+  return <Goals target={target} onEdit={onEdit} onNavigate={onNavigate} recovery />;
+}
 

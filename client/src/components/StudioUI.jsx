@@ -5,57 +5,31 @@ export const money = value => new Intl.NumberFormat('en-IN', {
   maximumFractionDigits: 0
 }).format(value);
 export const initials = name => (name || 'Drop Pilot').split(' ').filter(Boolean).slice(0, 2).map(s => s[0]).join('').toUpperCase();
-export const plans = ['Starter', 'Growth Plan', 'Enterprise AI'];
-export const navigation = [['overview', 'Overview', 'grid'], ['discover', 'Product discovery', 'compass'], ['listing', 'Listing studio', 'file'], ['suppliers', 'Supplier comparison', 'box'], ['pricing', 'Smart pricing', 'sliders'], ['content', 'Content generator', 'spark'], ['shopify', 'Shopify sync', 'bag'], ['goals', 'Profit goal planner', 'target'], ['recovery', 'Goal recovery', 'pulse']];
-export const products = [{
-  id: 'fan',
-  name: 'Portable Neck Fan',
-  category: 'Summer essentials',
-  cost: 449,
-  price: 1199,
-  orders: 2400,
-  score: 92,
-  icon: 'fan',
-  color: 'violet',
-  trend: 'Trending',
-  features: 'Hands-free wearable design\nThree adjustable speeds\nUSB-C rechargeable battery'
-}, {
-  id: 'brace',
-  name: 'Posture Support Brace',
-  category: 'Health & wellness',
-  cost: 380,
-  price: 999,
-  orders: 1800,
-  score: 88,
-  icon: 'pulse',
-  color: 'mint',
-  trend: 'High margin',
-  features: 'Adjustable straps\nLightweight design\nWearable support'
-}, {
-  id: 'lamp',
-  name: 'Galaxy Projector Lamp',
-  category: 'Home & lifestyle',
-  cost: 690,
-  price: 1599,
-  orders: 1200,
-  score: 84,
-  icon: 'spark',
-  color: 'peach',
-  trend: 'Rising',
-  features: 'Galaxy light projection\nAdjustable lighting\nCompact design'
-}, {
-  id: 'glove',
-  name: 'Pet Grooming Glove',
-  category: 'Pet care',
-  cost: 220,
-  price: 699,
-  orders: 3100,
-  score: 81,
-  icon: 'heart',
-  color: 'blue',
-  trend: 'Best seller',
-  features: 'Flexible grooming surface\nAdjustable wrist strap\nReusable design'
-}];
+export const plans = ['Starter', 'Growth Plan', 'Enterprise'];
+export const navigation = [['home', 'Home', 'home'], ['overview', 'Overview', 'grid'], ['discover', 'Product discovery', 'compass'], ['listing', 'Listing studio', 'file'], ['suppliers', 'Supplier comparison', 'box'], ['pricing', 'Smart pricing', 'sliders'], ['content', 'Content generator', 'spark'], ['shopify', 'Shopify sync', 'bag'], ['goals', 'Profit goal planner', 'target'], ['recovery', 'Goal recovery', 'pulse']];
+export const productImages = [
+  'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80'
+];
+export const products = [
+  ['therapy-mask', 'Portable LED Therapy Facial Mask', 'Beauty technology', 1240, 2899, 92, 1840, 'Trending'],
+  ['charging-stand', 'Magnetic Wireless Fast-Charging Desk Stand', 'Mobile accessories', 690, 1799, 90, 2650, 'High demand'],
+  ['posture-corrector', 'Smart Posture Corrector Wearable', 'Health and wellness', 820, 1999, 88, 1760, 'High margin'],
+  ['aroma-diffuser', 'Minimalist Ultrasonic Aroma Diffuser', 'Home and lifestyle', 540, 1499, 86, 2180, 'Rising'],
+  ['gimbal', 'Pro Gimbal Smartphone Stabilizer Tripod', 'Creator tools', 1350, 3299, 84, 1420, 'Creator pick'],
+  ['smart-bottle', 'Insulated Smart Temperature Display Bottle', 'Everyday essentials', 430, 1199, 82, 3090, 'Best seller'],
+  ['wireless-keypad', 'Ergonomic Mechanical Wireless Keypad', 'Workspace accessories', 1180, 2799, 80, 1280, 'Steady demand'],
+  ['espresso-maker', 'Compact Espresso Portable Travel Maker', 'Travel and outdoors', 1490, 3499, 79, 990, 'Premium margin']
+].map(([id, name, category, cost, price, score, orders, trend], index) => ({
+  id, name, category, cost, price, score, orders, trend, image: productImages[index], icon: 'box', color: ['peach', 'blue', 'mint'][index % 3],
+  features: 'Compact product design\nStore-ready positioning\nSupplier margin opportunity'
+}));
 export const suppliers = [{
   name: 'QuickCart Direct',
   cost: 449,
@@ -78,6 +52,7 @@ export function Icon({
   ...props
 }) {
   const paths = {
+    home: 'M3 10 12 3l9 7v10h-6v-6H9v6H3z',
     grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
     compass: 'm16 8-3 5-5 3 3-5z M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
     file: 'M14 3H5v18h14V8z M14 3v5h5 M8 12h8 M8 16h6',
@@ -202,5 +177,7 @@ export function ProductArt({
   product,
   small = false
 }) {
-  return <div className={`product-art ${product.color} ${small ? 'small' : ''}`}><Icon name={product.icon} size={small ? 26 : 76} />{!small && <span className="art-orbit" />}</div>;
+  const seed = String(product.id || product.name || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const image = product.image || productImages[seed % productImages.length];
+  return <div className={`product-art product-photo ${product.color || ''} ${small ? 'small' : ''}`}><img src={image} alt={product.name} loading="lazy" referrerPolicy="no-referrer" /></div>;
 }

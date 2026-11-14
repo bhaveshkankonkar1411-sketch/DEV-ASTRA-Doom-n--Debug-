@@ -1,51 +1,59 @@
 import mongoose from 'mongoose';
-import User from '../models/User.js';
-import ProfitGoal from '../models/ProfitGoal.js';
-import Order from '../models/Order.js';
-import StoreDataImport from '../models/StoreDataImport.js';
-import { sampleProfitGoals, sampleOrderRecords } from '../fixtures/sampleData.js';
-import { parseAndValidateCsv, CSV_SCHEMA } from '../services/csvImportService.js';
-import { aggregateOrdersProfit } from '../services/profitAggregationService.js';
-import { validateGoal } from '../validators/goalValidator.js';
 import { formatSuccess, formatError } from '../utils/responseFormatter.js';
+import { parseAndValidateCsv, CSV_SCHEMA } from '../services/csvImportService.js';
+import StoreDataImport from '../models/StoreDataImport.js';
+import Order from '../models/Order.js';
+import ProfitGoal from '../models/ProfitGoal.js';
 import { generateRecoveryAdvice } from '../services/ai/goalAdvisor.js';
+import { aggregateOrdersProfit } from '../services/profitAggregationService.js';
+import { sampleOrderRecords } from '../fixtures/sampleData.js';
 
-// In-memory fallback goal store
-let inMemoryGoals = sampleProfitGoals.map((g, idx) => ({
-  _id: g.id || `goal_${1000 + idx}`,
-  userId: 'demo_user',
-  title: g.title,
-  currency: 'INR',
-  month: '2026-11',
-  targetProfit: g.targetProfit,
-  monthlyNetProfitTarget: g.targetProfit,
-  currentProfit: g.currentProfit,
-  startDate: new Date(g.startDate),
-  targetDate: new Date(g.targetDate),
-  status: g.status,
-  milestones: g.milestones || [],
-  recommendedActions: g.recommendedActions || [],
-  createdAt: new Date(),
-}));
+const inMemoryGoals = new Map();
 
-/**
- * Helper to compute pacing status based on progress vs day of month
- */
-const calculatePacingStatus = (progressPercent, targetDate) => {
-  if (progressPercent >= 100) return 'ACHIEVED';
+const asMonthRange = (month) => {
+  const [year, value] = String(month || '').split('-').map(Number);
+  if (!Number.isInteger(year) || !Number.isInteger(value) || value < 1 || value > 12) return null;
+  const start = new Date(Date.UTC(year, value - 1, 1));
+  const end = new Date(Date.UTC(year, value, 1));
+  return { start, end };
+};
 
-  const now = new Date();
-  const dayOfMonth = now.getDate();
-  const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const expectedPacing = (dayOfMonth / totalDays) * 100;
+const makeGoalView = (goal, metrics) => {
+  const target = Number(goal.targetProfit);
+  const currentNetProfit = Number(metrics.financials.netProfit);
+  const remainingProfit = Math.max(0, target - currentNetProfit);
+  const progressPercent = target ? Number((currentNetProfit / target * 100).toFixed(2)) : 0;
+  return {
+    goalId: String(goal._id || goal.id),
+    month: goal.month,
+    target,
+    currentNetProfit,
+    remainingProfit,
+    progressPercent,
+    status: currentNetProfit >= target ? 'ACHIEVED' : progressPercent >= 75 ? 'ON_TRACK' : 'AT_RISK',
+    milestones: goal.milestones || [],
+    financials: metrics.financials,
+    productPerformance: metrics.productPerformance,
+    dataSource: metrics.dataSource,
+  };
+};
 
-  if (progressPercent >= expectedPacing * 0.9) return 'ON_TRACK';
-  if (progressPercent >= expectedPacing * 0.6) return 'AT_RISK';
-  return 'BEHIND';
+const getMetrics = async (userId, month) => {
+  const range = asMonthRange(month);
+  let orders;
+  if (mongoose.connection.readyState === 1) {
+    const query = { userId };
+    if (range) query.orderDate = { $gte: range.start, $lt: range.end };
+    orders = await Order.find(query);
+  } else {
+    orders = sampleOrderRecords.filter(order => !range || (new Date(order.orderDate) >= range.start && new Date(order.orderDate) < range.end));
+  }
+  return aggregateOrdersProfit(orders, { period: month, dataSource: mongoose.connection.readyState === 1 ? 'database' : 'sample_orders' });
 };
 
 /**
- * GET /api/profit-goals/csv/schema
+ * GET /api/goals/csv/schema or /api/profit-goals/csv/schema
+ * Return official CSV column schema specification and sample template
  */
 export const getCsvSchema = async (req, res, next) => {
   try {
@@ -68,7 +76,8 @@ export const getCsvSchema = async (req, res, next) => {
 };
 
 /**
- * POST /api/profit-goals/csv/preview
+ * POST /api/goals/csv/preview or /api/profit-goals/csv/preview
+ * Parse uploaded CSV file or body string, validate headers and rows, and return preview + preliminary totals
  */
 export const previewCsv = async (req, res, next) => {
   try {
@@ -94,7 +103,8 @@ export const previewCsv = async (req, res, next) => {
 };
 
 /**
- * POST /api/profit-goals/import-csv
+ * POST /api/goals/import-csv or /api/profit-goals/import-csv
+ * Validates and imports store performance records into database
  */
 export const importCsv = async (req, res, next) => {
   try {
@@ -107,7 +117,9 @@ export const importCsv = async (req, res, next) => {
     }
 
     if (!csvInput) {
-      return res.status(400).json(formatError('No CSV data provided for import.', 'VALIDATION_ERROR'));
+      return res
+        .status(400)
+        .json(formatError('No CSV data provided for import.', 'VALIDATION_ERROR'));
     }
 
     const report = await parseAndValidateCsv(csvInput);
@@ -118,20 +130,8 @@ export const importCsv = async (req, res, next) => {
         .json(formatError('CSV validation failed; no valid rows to import.', 'CSV_INVALID', report.errors));
     }
 
+    const userId = req.user?.id || 'demo_seller_user';
     const isDbConnected = mongoose.connection.readyState === 1;
-    let userId = req.user?.id || req.user?._id;
-    if (isDbConnected && (!userId || !mongoose.Types.ObjectId.isValid(userId))) {
-      try {
-        const dbUser = (await User.findOne({ email: req.user?.email })) || 
-                       (await User.findOne({ email: 'ratneshshirodkar17@gmail.com' })) || 
-                       (await User.findOne());
-        userId = dbUser ? dbUser._id : new mongoose.Types.ObjectId();
-      } catch {
-        userId = new mongoose.Types.ObjectId();
-      }
-    } else if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      userId = new mongoose.Types.ObjectId().toString();
-    }
 
     const importRecord = {
       id: 'imp_' + Date.now(),
@@ -177,322 +177,165 @@ export const importCsv = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/profit-goals or /api/goals
- * Create or update monthly profit target (PRD Section 10.8)
- */
 export const createGoal = async (req, res, next) => {
   try {
-    const { isValid, errors } = validateGoal(req.body);
-    if (!isValid) {
-      return res.status(400).json(formatError('Validation error', 'VALIDATION_ERROR', errors));
+    const payload = req.body || {};
+    const target = Number(payload.monthlyNetProfitTarget ?? payload.targetProfit ?? 0);
+    const currency = payload.currency || 'INR';
+    const month = payload.month;
+
+    if (!/^[0-9]{4}-[0-9]{2}$/.test(String(month || '')) || !Number.isFinite(target) || target <= 0 || currency !== 'INR') {
+      return res.status(400).json(formatError('Provide a valid month, INR currency, and positive monthly target.', 'VALIDATION_ERROR'));
     }
 
-    const userId = req.user?.id || 'demo_user';
-    const target = Number(req.body.monthlyNetProfitTarget ?? req.body.targetProfit);
-    const currency = req.body.currency || 'INR';
-    const month = req.body.month || new Date().toISOString().slice(0, 7);
-    const title = req.body.title || `${month} Net Profit Goal`;
+    const userId = req.user.id;
+    const range = asMonthRange(month);
+    const base = {
+      userId,
+      title: `${month} net profit target`,
+      currency,
+      month,
+      targetProfit: target,
+      monthlyNetProfitTarget: target,
+      currentProfit: 0,
+      startDate: range.start,
+      targetDate: new Date(Date.UTC(range.end.getUTCFullYear(), range.end.getUTCMonth(), 0, 23, 59, 59)),
+      status: 'ON_TRACK',
+      milestones: [25, 50, 75, 100].map(percent => ({
+        targetAmount: Number((target * percent / 100).toFixed(2)),
+        targetDate: new Date(range.start.getTime() + (range.end.getTime() - range.start.getTime()) * (percent / 100)),
+        achievedDate: null,
+        status: 'PENDING',
+      })),
+      recommendedActions: [],
+    };
 
-    // Generate monthly milestone targets (25%, 50%, 75%, 100%)
-    const year = parseInt(month.split('-')[0], 10);
-    const mNum = parseInt(month.split('-')[1], 10);
-    const lastDay = new Date(year, mNum, 0).getDate();
-
-    const milestones = [
-      { targetAmount: Math.round(target * 0.25), targetDate: new Date(year, mNum - 1, 7), status: 'PENDING' },
-      { targetAmount: Math.round(target * 0.5), targetDate: new Date(year, mNum - 1, 14), status: 'PENDING' },
-      { targetAmount: Math.round(target * 0.75), targetDate: new Date(year, mNum - 1, 21), status: 'PENDING' },
-      { targetAmount: target, targetDate: new Date(year, mNum - 1, lastDay), status: 'PENDING' },
-    ];
-
-    const isDbConnected = mongoose.connection.readyState === 1;
-    let goalDoc = null;
-
-    if (isDbConnected) {
-      goalDoc = await ProfitGoal.create({
-        userId,
-        title,
-        currency,
-        month,
-        targetProfit: target,
-        monthlyNetProfitTarget: target,
-        currentProfit: 0,
-        startDate: new Date(year, mNum - 1, 1),
-        targetDate: new Date(year, mNum - 1, lastDay),
-        status: 'ON_TRACK',
-        milestones,
-      });
+    let goal;
+    if (mongoose.connection.readyState === 1) {
+      const existing = await ProfitGoal.findOne({ userId, month });
+      goal = existing ? await ProfitGoal.findByIdAndUpdate(existing._id, base, { new: true }) : await ProfitGoal.create(base);
     } else {
-      goalDoc = {
-        _id: `goal_${Date.now()}`,
-        userId,
-        title,
-        currency,
-        month,
-        targetProfit: target,
-        monthlyNetProfitTarget: target,
-        currentProfit: 0,
-        startDate: new Date(year, mNum - 1, 1),
-        targetDate: new Date(year, mNum - 1, lastDay),
-        status: 'ON_TRACK',
-        milestones,
-        createdAt: new Date(),
-      };
-      inMemoryGoals.unshift(goalDoc);
+      goal = { ...base, _id: `goal_${Date.now()}`, id: `goal_${Date.now()}` };
+      inMemoryGoals.set(userId, goal);
     }
 
-    return res.status(201).json(formatSuccess(goalDoc, 'Profit goal created successfully'));
+    const goalId = String(goal._id || goal.id);
+    res.status(201).json(formatSuccess({
+      _id: goalId,
+      id: goalId,
+      month,
+      currency,
+      targetProfit: target,
+      monthlyNetProfitTarget: target,
+      milestones: goal.milestones || base.milestones,
+    }, 'Profit goal created'));
   } catch (err) {
     next(err);
   }
 };
 
-/**
- * GET /api/profit-goals/current or /api/goals/current
- * Retrieve active goal, actual profit, remaining target and pacing percentage (PRD Section 10.8)
- */
 export const getCurrentGoal = async (req, res, next) => {
   try {
-    const userId = req.user?.id || 'demo_user';
-    const isDbConnected = mongoose.connection.readyState === 1;
-
-    let goal = null;
-    let ordersList = [];
-
-    if (isDbConnected) {
-      goal = await ProfitGoal.findOne({ userId }).sort({ createdAt: -1 });
-      ordersList = await Order.find({ userId });
-    } else {
-      goal = inMemoryGoals[0] || null;
-      ordersList = sampleOrderRecords;
-    }
-
-    if (!goal) {
-      return res.status(404).json(formatError('No active profit goal found', 'GOAL_NOT_FOUND'));
-    }
-
-    // Aggregate actual order performance
-    const metrics = aggregateOrdersProfit(ordersList, {
-      currency: goal.currency || 'INR',
-      period: goal.month || 'current_month',
-    });
-
-    const target = goal.targetProfit || goal.monthlyNetProfitTarget || 50000;
-    const currentNetProfit = metrics.financials.netProfit;
-    const remainingProfit = Math.max(0, target - currentNetProfit);
-    const progressPercent = target > 0 ? Number(((currentNetProfit / target) * 100).toFixed(1)) : 0;
-    const pacingStatus = calculatePacingStatus(progressPercent, goal.targetDate);
-
-    const goalStatus = {
-      goalId: goal._id || goal.id,
-      title: goal.title,
-      currency: goal.currency || 'INR',
-      month: goal.month || '2026-11',
-      target,
-      currentNetProfit,
-      remainingProfit,
-      progressPercent,
-      status: pacingStatus,
-      milestones: goal.milestones,
-      financials: metrics.financials,
-      productPerformance: metrics.productPerformance,
-      dataSource: metrics.dataSource,
-    };
-
-    return res.json(formatSuccess(goalStatus, 'Current profit goal and progress retrieved successfully'));
-  } catch (err) {
-    next(err);
-  }
+    const userId = req.user.id;
+    const goal = mongoose.connection.readyState === 1
+      ? await ProfitGoal.findOne({ userId }).sort({ updatedAt: -1 })
+      : inMemoryGoals.get(userId);
+    if (!goal) return res.status(404).json(formatError('No active profit goal exists.', 'GOAL_NOT_FOUND'));
+    const metrics = await getMetrics(userId, goal.month);
+    res.json(formatSuccess(makeGoalView(goal, metrics), 'Current profit goal retrieved'));
+  } catch (err) { next(err); }
 };
 
-/**
- * POST /api/profit-goals/analyze or /api/goals/analyze
- * Deterministic analysis reconciling actual net profit against targets per PRD Section 10.8
- */
 export const analyzeGoal = async (req, res, next) => {
   try {
-    const { goalId, period = '2026-11', dataSource = 'csv_import' } = req.body;
-    const userId = req.user?.id || 'demo_user';
-    const isDbConnected = mongoose.connection.readyState === 1;
-
-    let goal = null;
-    let ordersList = [];
-
-    if (isDbConnected) {
-      if (goalId && mongoose.Types.ObjectId.isValid(goalId)) {
-        goal = await ProfitGoal.findById(goalId);
-      }
-      if (!goal) {
-        goal = await ProfitGoal.findOne({ userId }).sort({ createdAt: -1 });
-      }
-      ordersList = await Order.find({ userId });
-    } else {
-      goal = inMemoryGoals.find((g) => g._id === goalId || g.id === goalId) || inMemoryGoals[0];
-      ordersList = sampleOrderRecords;
+    const userId = req.user.id;
+    const goal = mongoose.connection.readyState === 1
+      ? await ProfitGoal.findById(req.body?.goalId)
+      : inMemoryGoals.get(userId);
+    if (!goal || (mongoose.connection.readyState === 1 && String(goal.userId) !== String(userId))) {
+      return res.status(404).json(formatError('Profit goal not found.', 'GOAL_NOT_FOUND'));
     }
-
-    const target = goal?.targetProfit || goal?.monthlyNetProfitTarget || 50000;
-    const currency = goal?.currency || 'INR';
-
-    // Calculate deterministic metrics via profitAggregationService
-    const metrics = aggregateOrdersProfit(ordersList, {
-      currency,
-      period,
-      dataSource,
-    });
-
-    const currentNetProfit = metrics.financials.netProfit;
-    const remainingProfit = Math.max(0, target - currentNetProfit);
-    const progressPercent = target > 0 ? Number(((currentNetProfit / target) * 100).toFixed(1)) : 0;
-    const pacingStatus = calculatePacingStatus(progressPercent, goal?.targetDate);
-
-    // Formulate deterministic grounded AI / rule-based summary
-    const topProduct = metrics.productPerformance[0];
-    const aiSummary =
-      progressPercent >= 100
-        ? `Target achieved! Net profit (₹${currentNetProfit}) exceeded your ₹${target} goal, driven by ${topProduct?.productName || 'strong product performance'}.`
-        : `Currently at ${progressPercent}% of target (₹${currentNetProfit} of ₹${target}). Remaining gap is ₹${remainingProfit}. Top revenue driver: ${topProduct?.productName || 'catalogue products'}.`;
-
-    const analysisResponse = {
-      goal: {
-        currency,
-        target,
-        currentNetProfit,
-        remainingProfit,
-        progressPercent,
-        status: pacingStatus,
-      },
-      financials: {
-        revenue: metrics.financials.revenue,
-        supplierCosts: metrics.financials.supplierCosts,
-        advertisingCosts: metrics.financials.advertisingCosts,
-        shippingCosts: metrics.financials.shippingCosts,
-        platformFees: metrics.financials.platformFees,
-        otherExpenses: metrics.financials.otherExpenses,
-      },
-      productPerformance: metrics.productPerformance,
-      dataSource,
-      calculationBasis: 'backend',
-      aiSummary,
-    };
-
-    return res.json(formatSuccess(analysisResponse, 'Profit goal analysis calculated successfully'));
-  } catch (err) {
-    next(err);
-  }
+    const metrics = await getMetrics(userId, goal.month);
+    const view = makeGoalView(goal, metrics);
+    res.json(formatSuccess({ goal: view, financials: metrics.financials, productPerformance: metrics.productPerformance, calculationBasis: 'backend', dataSource: metrics.dataSource, aiSummary: `Net profit is ${view.progressPercent}% of the ${goal.month} target based on ${metrics.dataSource.replaceAll('_', ' ')}.` }, 'Profit goal analysis completed'));
+  } catch (err) { next(err); }
 };
 
-/**
- * GET /api/profit-goals or /api/goals
- */
 export const getGoals = async (req, res, next) => {
   try {
-    const userId = req.user?.id || 'demo_user';
-    const isDbConnected = mongoose.connection.readyState === 1;
+    const userId = req.user.id;
+    const goals = mongoose.connection.readyState === 1
+      ? await ProfitGoal.find({ userId }).sort({ createdAt: -1 })
+      : [...inMemoryGoals.values()].filter(goal => String(goal.userId) === String(userId));
 
-    let goals = [];
-    if (isDbConnected) {
-      goals = await ProfitGoal.find({ userId }).sort({ createdAt: -1 });
-    } else {
-      goals = inMemoryGoals;
-    }
-
-    return res.json(formatSuccess(goals, 'Goals retrieved successfully'));
+    res.json(formatSuccess(goals.map(goal => ({
+      _id: String(goal._id || goal.id),
+      id: String(goal._id || goal.id),
+      month: goal.month,
+      currency: goal.currency || 'INR',
+      targetProfit: Number(goal.targetProfit ?? goal.monthlyNetProfitTarget ?? 0),
+      monthlyNetProfitTarget: Number(goal.monthlyNetProfitTarget ?? goal.targetProfit ?? 0),
+      milestones: goal.milestones || [],
+    })), 'Goals retrieved'));
   } catch (err) {
     next(err);
   }
 };
 
-/**
- * GET /api/profit-goals/:id or /api/goals/:id
- */
 export const getGoalById = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const isDbConnected = mongoose.connection.readyState === 1;
-
-    let goal = null;
-    if (isDbConnected) {
-      if (mongoose.Types.ObjectId.isValid(id)) {
-        goal = await ProfitGoal.findById(id);
-      }
-    } else {
-      goal = inMemoryGoals.find((g) => g._id === id || g.id === id);
-    }
+    const userId = req.user.id;
+    const goal = mongoose.connection.readyState === 1
+      ? await ProfitGoal.findById(req.params.id)
+      : [...inMemoryGoals.values()].find(item => String(item._id || item.id) === String(req.params.id) && String(item.userId) === String(userId));
 
     if (!goal) {
-      return res.status(404).json(formatError('Goal not found', 'GOAL_NOT_FOUND'));
+      return res.status(404).json(formatError('Goal not found.', 'GOAL_NOT_FOUND'));
     }
 
-    return res.json(formatSuccess(goal, 'Goal details retrieved'));
+    const payload = {
+      _id: String(goal._id || goal.id),
+      id: String(goal._id || goal.id),
+      userId: String(goal.userId),
+      month: goal.month,
+      currency: goal.currency || 'INR',
+      targetProfit: Number(goal.targetProfit ?? goal.monthlyNetProfitTarget ?? 0),
+      monthlyNetProfitTarget: Number(goal.monthlyNetProfitTarget ?? goal.targetProfit ?? 0),
+      milestones: goal.milestones || [],
+      status: goal.status || 'ON_TRACK',
+      startDate: goal.startDate,
+      targetDate: goal.targetDate,
+    };
+
+    res.json(formatSuccess(payload, 'Goal details retrieved'));
   } catch (err) {
     next(err);
   }
 };
 
-/**
- * GET /api/profit-goals/:id/progress or /api/goals/:id/progress
- */
 export const getGoalProgress = async (req, res, next) => {
   try {
-    return getCurrentGoal(req, res, next);
+    const userId = req.user.id;
+    const goal = mongoose.connection.readyState === 1
+      ? await ProfitGoal.findById(req.params.id)
+      : [...inMemoryGoals.values()].find(item => String(item._id || item.id) === String(req.params.id) && String(item.userId) === String(userId));
+
+    if (!goal) {
+      return res.status(404).json(formatError('Goal not found.', 'GOAL_NOT_FOUND'));
+    }
+
+    const metrics = await getMetrics(userId, goal.month);
+    const view = makeGoalView(goal, metrics);
+    res.json(formatSuccess({ id: String(goal._id || goal.id), month: goal.month, pacing: view.status, progressPercent: view.progressPercent, remainingProfit: view.remainingProfit }, 'Goal progress retrieved'));
   } catch (err) {
     next(err);
   }
 };
 
-/**
- * POST /api/profit-goals/:id/recovery-chat
- */
 export const getRecoveryChat = async (req, res, next) => {
   try {
-    let payload = { ...req.body };
-    const goalId = req.params.id;
-
-    if (!payload.financials || !payload.goalMetrics?.target) {
-      const isDbConnected = mongoose.connection.readyState === 1;
-      const userId = req.user?.id;
-
-      let goal = null;
-      if (goalId && mongoose.Types.ObjectId.isValid(goalId)) {
-        goal = await ProfitGoal.findById(goalId);
-      }
-      if (!goal && isDbConnected) {
-        goal = await ProfitGoal.findOne(userId ? { userId } : {}).sort({ createdAt: -1 });
-      }
-
-      let ordersList = [];
-      if (isDbConnected) {
-        ordersList = await Order.find(userId ? { userId } : {});
-      }
-      if (!ordersList || ordersList.length === 0) {
-        ordersList = sampleOrderRecords;
-      }
-
-      const target = Number(payload.target || payload.goalMetrics?.target || goal?.targetProfit || goal?.monthlyNetProfitTarget || 50000);
-      const metrics = aggregateOrdersProfit(ordersList);
-      const currentNetProfit = metrics.financials.netProfit;
-      const remainingProfit = Math.max(0, target - currentNetProfit);
-      const progressPercent = target > 0 ? Number(((currentNetProfit / target) * 100).toFixed(1)) : 0;
-
-      payload.goalMetrics = {
-        target,
-        currentNetProfit,
-        remainingProfit,
-        progressPercent,
-        ...(payload.goalMetrics || {}),
-      };
-      payload.financials = {
-        ...metrics.financials,
-        ...(payload.financials || {}),
-      };
-      payload.productPerformance = metrics.productPerformance;
-      payload.dataSource = ordersList === sampleOrderRecords ? 'demo_fixture' : 'database_orders';
-    }
-
-    const advice = await generateRecoveryAdvice(payload);
-    return res.json(formatSuccess(advice, 'Recovery advice generated'));
+    const advice = await generateRecoveryAdvice(req.body);
+    res.json(formatSuccess(advice, 'Recovery advice generated'));
   } catch (err) {
     next(err);
   }

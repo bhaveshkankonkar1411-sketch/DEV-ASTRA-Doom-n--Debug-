@@ -199,7 +199,7 @@ export const sampleProducts = [
     sourceLabel: 'DEMO_CATALOGUE',
     sku: 'HLTH-POSTURE-03',
     inventoryCount: 200,
-    imageUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&auto=format&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?auto=format&fit=crop&w=600&q=80',
     supplierIds: ['supp_005'],
   },
   {

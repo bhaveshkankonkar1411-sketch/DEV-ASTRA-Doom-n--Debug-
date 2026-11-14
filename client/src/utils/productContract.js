@@ -31,6 +31,7 @@ export function normalizeProduct(product) {
     trend,
     icon: 'box',
     color: 'violet',
+    image: typeof product.imageUrl === 'string' && product.imageUrl.trim() ? product.imageUrl : undefined,
     features: typeof product.description === 'string' ? product.description : '',
     sourceLabel: product.sourceLabel,
     supplierIds,

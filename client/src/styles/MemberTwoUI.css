@@ -1,0 +1,20 @@
+/* Shared visual system for the reusable layout and dashboard parts supplied by Member 2. */
+.legacy-layout { min-height: 100vh; display: flex; flex-direction: column; background: #f6f5f2; color: #111827; }
+.legacy-layout .navbar { height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid #cbd5e1; background: rgba(255,255,255,.92); }
+.legacy-layout .navbar-brand { font-size: 22px; font-weight: 800; letter-spacing: -.05em; color: #111827; }
+.legacy-layout .navbar-brand::before { content: "✦"; margin-right: 10px; color: #ff5a1f; }
+.legacy-layout-body { display: grid; grid-template-columns: 256px minmax(0,1fr); flex: 1; }
+.legacy-sidebar { padding: 24px 14px; border-right: 1px solid #cbd5e1; background: #fff; }
+.legacy-sidebar-nav { display: grid; gap: 6px; }
+.legacy-sidebar-nav button { min-height: 46px; padding: 0 14px; border: 1px solid transparent; border-radius: 6px; text-align: left; color: #5b6473; font-size: 16px; font-weight: 700; }
+.legacy-sidebar-nav button:hover, .legacy-sidebar-nav button.legacy-active { border-color: #ffb194; background: #fff3ed; color: #e04812; }
+.legacy-layout-content { min-width: 0; padding: 32px; }
+.legacy-layout .footer { padding: 18px 32px; border-top: 1px solid #cbd5e1; background: #fff; color: #687180; font-size: 14px; }
+.legacy-product-card { overflow: hidden; padding: 0; border-radius: 12px; }
+.legacy-product-card h2 { margin: 0; font-size: 22px; }.legacy-product-card p { margin: 7px 0 16px; }
+.legacy-product-card strong { display: block; color: #e04812; font-size: 28px; }
+.legacy-product-card > .secondary { margin: 20px; width: calc(100% - 40px); }
+.legacy-chart { min-height: 280px; padding: 26px; border-radius: 12px; }.legacy-chart figcaption > span { color: #e04812; font-size: 11px; font-weight: 800; letter-spacing: .14em; }.legacy-chart h2 { margin-top: 8px; }
+.legacy-chart .metric-chart { display: flex; align-items: end; gap: 12px; min-height: 180px; padding-top: 30px; border-bottom: 1px solid #cbd5e1; }.legacy-chart .metric-chart-column { flex: 1; display: grid; gap: 8px; justify-items: center; height: 160px; }.legacy-chart .metric-chart-column i { align-self: end; width: 100%; max-width: 42px; border-radius: 6px 6px 0 0; background: linear-gradient(#ff875e, #ff5a1f); }.legacy-chart .metric-chart-column span { color: #687180; font-size: 12px; }
+.legacy-goal-chart { border-radius: 12px; }.legacy-goal-chart figcaption { display:flex; align-items:center; justify-content:space-between; }.legacy-goal-chart figcaption strong { color:#e04812; font-size:34px; }.legacy-goal-chart .goal-progress-track { margin-top:26px; height:12px; overflow:hidden; border-radius:99px; background:#f2ded5; }.legacy-goal-chart .goal-progress-track i { display:block; height:100%; border-radius:inherit; background:#ff5a1f; }
+@media (max-width: 800px) { .legacy-layout-body { grid-template-columns: 1fr; }.legacy-sidebar { border-right: 0; border-bottom: 1px solid #cbd5e1; }.legacy-sidebar-nav { grid-template-columns: repeat(2,minmax(0,1fr)); }.legacy-layout-content { padding: 22px 16px; } }

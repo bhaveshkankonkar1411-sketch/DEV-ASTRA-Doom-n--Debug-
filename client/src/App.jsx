@@ -5,9 +5,12 @@ import analyticsService from './services/analyticsService';
 import { Count, Field, Icon, initials, Modal, money, navigation, PageHead, plans, ProductArt, products, suppliers, useStored } from './components/StudioUI';
 import { GoalRing, RevenueChart } from './components/charts/StudioCharts';
 import { Discovery, Goals, ListingStudio, ProductSentimentInspector, Shopify, SupplierComparison } from './pages/StudioWorkspaces';
+import HomeLaunchpad from './pages/HomeLaunchpad';
 import Pricing from './pages/SmartPricingPage';
 import ProfitGoalPlannerPage from './pages/ProfitGoalPlannerPage';
 import './styles/App.css';
+import './styles/Launchpad.css';
+import './styles/WarmDepth.css';
 function Brand() {
   return <div className="brand"><span className="brand-mark"><Icon name="spark" size={27} /></span><span>DropPilot<span className="brand-ai">AI</span><small>Your unfair advantage.</small></span></div>;
 }
@@ -211,7 +214,7 @@ export default function App() {
   } = useAuth();
   const [theme, setTheme] = useStored('droppilot_theme', 'light'),
     [target, setTarget] = useStored('droppilot_target', 62500);
-  const [page, setPage] = useState('overview'),
+  const [page, setPage] = useState('home'),
     [menu, setMenu] = useState(false),
     [modal, setModal] = useState(null),
     [profile, setProfile] = useState(false),
@@ -273,14 +276,14 @@ export default function App() {
           transform: `translateY(${navigation.findIndex(n => n[0] === page) * 52}px)`
         }} />{navigation.map(([id, label, icon], i) => <button key={id} style={{
           '--i': i
-        }} className={page === id ? 'active' : ''} aria-current={page === id ? 'page' : undefined} onClick={() => navigate(id)}><Icon name={icon} /><span>{label}</span>{id === 'content' && <small className="ai-tag">AI</small>}</button>)}</nav><div className="sidebar-bottom"><div className="plan-card"><span className="plan-spark"><Icon name="spark" /></span><span className="eyebrow">ROOM TO GROW</span><h3>Your next level awaits.</h3><p>Big ideas deserve powerful tools.</p><button onClick={() => setModal('plan')}>Explore plans <Icon name="arrow" size={17} /></button></div><div className="sidebar-status"><span className="status-dot" />{user.sessionMode === 'api' ? 'API session' : 'Demo workspace'}<span>v.2.0</span></div></div></aside><div className="main-shell"><header className="topbar glass"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={() => setMenu(true)}><Icon name="menu" /></button><button className="command-trigger" onClick={() => setModal('search')}><Icon name="search" /><span>Search products, suppliers, or listings…</span><kbd>⌘ K</kbd></button><div className="topbar-actions"><ThemeSwitch theme={theme} setTheme={setTheme} /><button className="icon-button notification-button" aria-label="Notifications" onClick={() => setModal('notifications')}><Icon name="bell" /><i /></button><div className="profile-wrap" ref={profileRef}><button className="profile-trigger" aria-expanded={profile} onClick={() => setProfile(!profile)}><span className="avatar">{initials(user.name)}</span><span className="profile-info"><b>{user.name}</b><small>{user.plan || 'Starter'}</small></span><Icon name="down" size={15} /></button>{profile && <div className="profile-menu glass"><div><b>{user.name}</b><small>{user.email}</small></div>{[['user', 'Edit Profile', 'profile'], ['moon', 'Switch Theme', 'theme'], ['wallet', 'Billing & Plan', 'plan'], ['logout', 'Sign Out', 'logout']].map(([icon, label, action]) => <button key={action} onClick={() => {
+        }} className={page === id ? 'active' : ''} aria-current={page === id ? 'page' : undefined} onClick={() => navigate(id)}><Icon name={icon} /><span>{label}</span>{id === 'content' && <small className="ai-tag">AI</small>}</button>)}</nav><div className="sidebar-bottom"><div className="sidebar-status"><span className="status-dot" />{user.sessionMode === 'api' ? 'API session' : 'Demo workspace'}<span>v.2.0</span></div></div></aside><div className="main-shell"><header className="topbar glass"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={() => setMenu(true)}><Icon name="menu" /></button><button className="command-trigger" onClick={() => setModal('search')}><Icon name="search" /><span>Search products, suppliers, or listings…</span><kbd>⌘ K</kbd></button><div className="topbar-actions"><ThemeSwitch theme={theme} setTheme={setTheme} /><button className="icon-button notification-button" aria-label="Notifications" onClick={() => setModal('notifications')}><Icon name="bell" /><i /></button><div className="profile-wrap" ref={profileRef}><button className="profile-trigger" aria-expanded={profile} onClick={() => setProfile(!profile)}><span className="avatar">{initials(user.name)}</span><span className="profile-info"><b>{user.name}</b><small>{user.plan || 'Starter'}</small></span><Icon name="down" size={15} /></button>{profile && <div className="profile-menu glass"><div><b>{user.name}</b><small>{user.email}</small></div>{[['user', 'Edit Profile', 'profile'], ['moon', 'Switch Theme', 'theme'], ['wallet', 'Billing & Plan', 'plan'], ['logout', 'Sign Out', 'logout']].map(([icon, label, action]) => <button key={action} onClick={() => {
                 setProfile(false);
                 if (action === 'theme') setTheme(theme === 'light' ? 'dark' : 'light');else if (action === 'logout') {
                   setModal(null);
-                  setPage('overview');
+                  setPage('home');
                   logout();
                 } else setModal(action);
-              }}><Icon name={icon} size={18} />{label}</button>)}</div>}</div></div></header><main id="workspace" className="workspace" tabIndex="-1"><div className="page-enter" key={page}>{page === 'overview' && <Overview user={user} target={safeTarget} onNavigate={navigate} onDiscover={() => setModal('discover')} onGoal={() => setModal('goal')} onSelect={select} />} {page === 'discover' && <Discovery onSelect={select} />} {page === 'pricing' && <Pricing key={selected.id} product={selected} />} {page === 'suppliers' && <SupplierComparison product={selected} notify={notify} />} {(page === 'listing' || page === 'content') && <ListingStudio key={page + selected.id} product={selected} content={page === 'content'} notify={notify} user={user} />} {page === 'shopify' && <Shopify notify={notify} />} {page === 'goals' && <ProfitGoalPlannerPage />} {page === 'recovery' && <Goals target={safeTarget} onEdit={() => setModal('goal')} recovery={page === 'recovery'} onNavigate={navigate} />}</div></main></div>{modal && <Modal title={{
+              }}><Icon name={icon} size={18} />{label}</button>)}</div>}</div></div></header><main id="workspace" className="workspace" tabIndex="-1"><div className="page-enter" key={page}>{page === 'home' && <HomeLaunchpad user={user} onNavigate={navigate} />} {page === 'overview' && <Overview user={user} target={safeTarget} onNavigate={navigate} onDiscover={() => setModal('discover')} onGoal={() => setModal('goal')} onSelect={select} />} {page === 'discover' && <Discovery onSelect={select} />} {page === 'pricing' && <Pricing key={selected.id} product={selected} />} {page === 'suppliers' && <SupplierComparison product={selected} notify={notify} />} {(page === 'listing' || page === 'content') && <ListingStudio key={page + selected.id} product={selected} content={page === 'content'} notify={notify} user={user} />} {page === 'shopify' && <Shopify notify={notify} />} {page === 'goals' && <ProfitGoalPlannerPage />} {page === 'recovery' && <Goals target={safeTarget} onEdit={() => setModal('goal')} recovery={page === 'recovery'} onNavigate={navigate} />}</div></main></div>{modal && <Modal title={{
       search: 'A little shortcut to everything.',
       profile: 'Make it yours.',
       plan: 'Your workspace plan',

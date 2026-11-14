@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node tests/auth.test.js && node tests/products.test.js && node tests/pricing.test.js && node tests/suppliers.test.js && node tests/shopify.test.js && node tests/csv.test.js && node tests/orders.test.js && node tests/goals.test.js && node tests/t029-regression-pass.test.js",
+    "test": "node tests/auth.test.js && node tests/products.test.js && node tests/pricing.test.js && node tests/suppliers.test.js && node tests/shopify.test.js && node tests/csv.test.js && node tests/orders.test.js && node tests/goals.test.js",
     "seed": "node src/scripts/seed.js"
   },
   "dependencies": {

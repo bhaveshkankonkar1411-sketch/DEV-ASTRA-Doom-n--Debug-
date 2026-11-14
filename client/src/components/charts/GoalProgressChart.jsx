@@ -4,7 +4,7 @@ export const GoalProgressChart = ({ goal = {} }) => {
   const progress = Math.min(100, (achieved / target) * 100);
 
   return (
-    <figure className="panel goal-progress-figure">
+    <figure className="panel goal-progress-figure legacy-goal-chart">
       <figcaption>
         <h2>Profit goal milestone pacing</h2>
         <strong>{Math.round(progress)}%</strong>

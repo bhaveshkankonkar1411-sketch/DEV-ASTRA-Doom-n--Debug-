@@ -1,0 +1,843 @@
+:root {
+  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+}
+
+:root:not([data-theme=dark]) {
+  color-scheme: light;
+  --canvas: #F8FAFC;
+  --text: #0F172A;
+  --muted: #64748B;
+  --subtle: #64748B;
+  --panel: #FFFFFF;
+  --line: #CBD5E1;
+  --input: #FFFFFF;
+  --accent: #e04812;
+  --accent-soft: #fff4ed;
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+  --positive: #059669;
+  --green-bg: #ECFDF5;
+  --glass-border: #CBD5E1;
+  --chart-slate: #64748B;
+  --chart-blue: #4F6BED;
+  --chart-green: #059669;
+}
+
+:root:not([data-theme=dark]) body {
+  background: var(--canvas);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+:root:not([data-theme=dark]) body:before {
+  background: none;
+  animation: none;
+}
+
+:root:not([data-theme=dark]) button,
+:root:not([data-theme=dark]) input,
+:root:not([data-theme=dark]) select,
+:root:not([data-theme=dark]) textarea {
+  font-family: inherit;
+}
+
+:root:not([data-theme=dark]) h1,
+:root:not([data-theme=dark]) h2,
+:root:not([data-theme=dark]) h3 {
+  color: #0F172A;
+}
+
+:root:not([data-theme=dark]) h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+:root:not([data-theme=dark]) h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+:root:not([data-theme=dark]) p {
+  color: #64748B;
+  font-size: 1rem;
+}
+
+:root:not([data-theme=dark]) .glass,
+:root:not([data-theme=dark]) .panel {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root:not([data-theme=dark]) .sidebar,
+:root:not([data-theme=dark]) .topbar,
+:root:not([data-theme=dark]) .modal,
+:root:not([data-theme=dark]) .profile-menu {
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root:not([data-theme=dark]) .sidebar {
+  border-right: 1px solid #CBD5E1;
+}
+
+:root:not([data-theme=dark]) .primary {
+  color: #e04812;
+  background: #fff4ed;
+  border: 1px solid #1E293B;
+  box-shadow: none;
+}
+
+:root:not([data-theme=dark]) .primary:hover:not(:disabled) {
+  background: #ffdec9;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1);
+}
+
+:root:not([data-theme=dark]) .secondary {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+}
+
+:root:not([data-theme=dark]) .secondary:hover {
+  background: #fff4ed;
+  color: #e04812;
+  border-color: #1E293B;
+}
+
+:root:not([data-theme=dark]) button:focus-visible,
+:root:not([data-theme=dark]) a:focus-visible {
+  outline: 2px solid #0F172A;
+  outline-offset: 3px;
+}
+
+:root:not([data-theme=dark]) input,
+:root:not([data-theme=dark]) textarea,
+:root:not([data-theme=dark]) select {
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+}
+
+:root:not([data-theme=dark]) input:focus,
+:root:not([data-theme=dark]) textarea:focus,
+:root:not([data-theme=dark]) select:focus {
+  border-color: #0F172A;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+}
+
+:root:not([data-theme=dark]) .brand-mark,
+:root:not([data-theme=dark]) .hero-logo {
+  color: #e04812;
+  background: #fff4ed;
+  border: 1px solid #CBD5E1;
+  box-shadow: none;
+}
+
+:root:not([data-theme=dark]) .gradient-text {
+  color: #e04812;
+  background: none;
+  animation: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+:root:not([data-theme=dark]) .auth-card {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+}
+
+:root:not([data-theme=dark]) .auth-card h2 {
+  color: #0F172A;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+:root:not([data-theme=dark]) .auth-card .eyebrow,
+:root:not([data-theme=dark]) .auth-links button,
+:root:not([data-theme=dark]) .demo-link,
+:root:not([data-theme=dark]) .text-button,
+:root:not([data-theme=dark]) .brand-ai {
+  color: #e04812;
+}
+
+:root:not([data-theme=dark]) .auth-orbit .orbit-circle {
+  border-color: rgba(100, 116, 139, 0.18);
+}
+
+:root:not([data-theme=dark]) .floating-chip {
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+:root:not([data-theme=dark]) .badge,
+:root:not([data-theme=dark]) .workspace-avatar,
+:root:not([data-theme=dark]) .ai-tag {
+  color: #e04812;
+  background: #fff4ed;
+  border-color: #CBD5E1;
+}
+
+:root:not([data-theme=dark]) .positive,
+:root:not([data-theme=dark]) .positive-text,
+:root:not([data-theme=dark]) .kpi-bottom > span {
+  color: #059669;
+}
+
+:root:not([data-theme=dark]) .positive {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+}
+
+:root:not([data-theme=dark]) .segmented .selected {
+  color: #e04812;
+  background: #fff4ed;
+  border: 1px solid #CBD5E1;
+}
+
+:root:not([data-theme=dark]) .form-field > span {
+  color: #334155;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+:root:not([data-theme=dark]) .sidebar nav button {
+  color: #334155;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+:root:not([data-theme=dark]) .sidebar nav button.active {
+  border: 1px solid #1E293B;
+}
+
+:root:not([data-theme=dark]) .sidebar nav button.active,
+:root:not([data-theme=dark]) .sidebar nav button:hover {
+  color: #e04812;
+  background: #fff4ed;
+}
+
+:root:not([data-theme=dark]) .nav-indicator {
+  background: #fff4ed;
+  border-color: #CBD5E1;
+}
+
+:root:not([data-theme=dark]) .plan-card {
+  color: #334155;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  box-shadow: none;
+}
+
+:root:not([data-theme=dark]) .plan-card .eyebrow,
+:root:not([data-theme=dark]) .plan-card p,
+:root:not([data-theme=dark]) .plan-spark {
+  color: #64748B;
+}
+
+:root:not([data-theme=dark]) .avatar {
+  color: #e04812;
+  background: #fff4ed;
+  border-color: #FFFFFF;
+  box-shadow: 0 0 0 1px #CBD5E1;
+}
+
+:root:not([data-theme=dark]) .greeting-wave,
+:root:not([data-theme=dark]) .status-dot {
+  color: #e04812;
+}
+
+:root:not([data-theme=dark]) .status-dot {
+  background: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+:root:not([data-theme=dark]) .greeting-wave,
+:root:not([data-theme=dark]) .plan-spark {
+  color: #e04812;
+}
+
+:root:not([data-theme=dark]) .notification-button i {
+  background: #e04812;
+}
+
+:root:not([data-theme=dark]) .nav-indicator,
+:root:not([data-theme=dark]) .ai-tag {
+  border-color: #CBD5E1;
+}
+
+:root:not([data-theme=dark]) .kpi:before {
+  background: radial-gradient(220px circle at var(--x, 50%) var(--y, 50%), rgba(79, 107, 237, 0.1), transparent 75%);
+}
+
+:root:not([data-theme=dark]) .kpi:hover {
+  border-color: #64748B;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+:root:not([data-theme=dark]) .kpi:hover .metric-orb {
+  box-shadow: 0 0 16px rgba(79, 107, 237, 0.12);
+}
+
+:root:not([data-theme=dark]) .sparkline {
+  stroke: #64748B;
+}
+
+:root:not([data-theme=dark]) .revenue-bar {
+  filter: drop-shadow(0 0 3px rgba(79, 107, 237, 0.12));
+}
+
+:root:not([data-theme=dark]) .ring-progress {
+  filter: drop-shadow(0 2px 3px rgba(79, 107, 237, 0.16));
+}
+
+:root:not([data-theme=dark]) .milestones .reached {
+  color: #334155;
+}
+
+:root:not([data-theme=dark]) .milestones .reached i {
+  color: #e04812;
+  background: #fff4ed;
+  border: 1px solid #CBD5E1;
+}
+
+:root:not([data-theme=dark]) .price-slider {
+  accent-color: #e04812;
+}
+
+:root:not([data-theme=dark]) .insight {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+}
+
+:root:not([data-theme=dark]) .page-head h1 {
+  color: #0F172A;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+:root:not([data-theme=dark]) .metric-value {
+  color: #0F172A;
+  font-size: 2.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+:root:not([data-theme=dark]) .chart-summary strong,
+:root:not([data-theme=dark]) .chart-tooltip strong,
+:root:not([data-theme=dark]) .ring strong,
+:root:not([data-theme=dark]) .goal-amount,
+:root:not([data-theme=dark]) .top-product-row > strong,
+:root:not([data-theme=dark]) .financial-breakdown dd,
+:root:not([data-theme=dark]) .mini-stats strong {
+  color: #0F172A;
+  font-variant-numeric: tabular-nums;
+}
+
+:root:not([data-theme=dark]) .ring strong,
+:root:not([data-theme=dark]) .ring strong small {
+  color: #0F172A;
+}
+
+:root:not([data-theme=dark]) .metric-orb,
+:root:not([data-theme=dark]) .violet.metric-orb,
+:root:not([data-theme=dark]) .violet.orb,
+:root:not([data-theme=dark]) .mint.metric-orb,
+:root:not([data-theme=dark]) .mint.orb,
+:root:not([data-theme=dark]) .blue.metric-orb,
+:root:not([data-theme=dark]) .peach.metric-orb {
+  color: #e04812;
+  background: #fff4ed;
+}
+
+:root:not([data-theme=dark]) .metric-chart-column i,
+:root:not([data-theme=dark]) .goal-progress-track i {
+  background: linear-gradient(135deg, var(--chart-slate), var(--chart-blue));
+}
+
+:root:not([data-theme=dark]) .chart-legend span:first-child i {
+  background: var(--chart-slate);
+}
+
+:root:not([data-theme=dark]) .chart-legend span:nth-child(2) i {
+  background: var(--chart-green);
+}
+
+:root:not([data-theme=dark]) .revenue-svg defs linearGradient:first-child stop:first-child,
+:root:not([data-theme=dark]) .goal-panel .ring defs linearGradient stop:first-child {
+  stop-color: var(--chart-slate);
+}
+
+:root:not([data-theme=dark]) .revenue-svg defs linearGradient:first-child stop:last-child,
+:root:not([data-theme=dark]) .goal-panel .ring defs linearGradient stop:nth-child(2),
+:root:not([data-theme=dark]) .goal-panel .ring defs linearGradient stop:last-child {
+  stop-color: var(--chart-blue);
+}
+
+:root:not([data-theme=dark]) .revenue-svg defs linearGradient:nth-child(2) stop:first-child {
+  stop-color: var(--chart-green);
+  stop-opacity: 0.16;
+}
+
+:root:not([data-theme=dark]) .revenue-svg defs linearGradient:nth-child(2) stop:last-child {
+  stop-color: var(--chart-green);
+  stop-opacity: 0;
+}
+
+:root:not([data-theme=dark]) .revenue-svg path[stroke],
+:root:not([data-theme=dark]) .revenue-svg circle {
+  stroke: var(--chart-green);
+}
+
+:root:not([data-theme=dark]) .revenue-svg circle {
+  fill: #FFFFFF;
+}
+
+:root:not([data-theme=dark]) .metric-value,
+:root:not([data-theme=dark]) .chart-summary,
+:root:not([data-theme=dark]) .chart-tooltip,
+:root:not([data-theme=dark]) .ring,
+:root:not([data-theme=dark]) .goal-amount,
+:root:not([data-theme=dark]) .goal-panel .milestones,
+:root:not([data-theme=dark]) .top-product-row > strong,
+:root:not([data-theme=dark]) .financial-breakdown,
+:root:not([data-theme=dark]) .mini-stats {
+  font-variant-numeric: tabular-nums;
+}
+
+:root:not([data-theme=dark]) strong {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 480px) {
+  :root:not([data-theme=dark]) .page-head h1 {
+    font-size: 2rem;
+  }
+
+  :root:not([data-theme=dark]) .metric-value {
+    font-size: 1.9rem;
+  }
+
+  :root:not([data-theme=dark]) .auth-card h2 {
+    font-size: 2rem;
+  }
+}
+
+:root:not([data-theme=dark]) {
+  color-scheme: light;
+  --canvas: #F6F5F2;
+  --text: #111827;
+  --muted: #4B5563;
+  --subtle: #6B7280;
+  --panel: #FFFFFF;
+  --line: #E5E7EB;
+  --input: #FFFFFF;
+  --accent: #FF5A1F;
+  --accent-soft: #FFF4ED;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --positive: #FF5A1F;
+  --green-bg: #FFF4ED;
+  --glass-border: #E5E7EB;
+  --chart-slate: #FF5A1F;
+  --chart-blue: #5EC2F2;
+  --chart-green: #F5AF64;
+}
+
+:root:not([data-theme=dark]) body {
+  background: #F6F5F2;
+  color: #111827;
+  font-variant-numeric: tabular-nums;
+}
+
+:root:not([data-theme=dark]) body::before {
+  background: none;
+  animation: none;
+}
+
+:root:not([data-theme=dark]) h1,
+:root:not([data-theme=dark]) h2,
+:root:not([data-theme=dark]) h3,
+:root:not([data-theme=dark]) strong {
+  color: #111827;
+}
+
+:root:not([data-theme=dark]) p {
+  color: #6B7280;
+}
+
+:root:not([data-theme=dark]) .app-shell,
+:root:not([data-theme=dark]) .main-shell,
+:root:not([data-theme=dark]) .workspace {
+  background: #FFFFFF;
+}
+
+:root:not([data-theme=dark]) .sidebar,
+:root:not([data-theme=dark]) .auth-shell {
+  background: #F6F5F2;
+}
+
+:root:not([data-theme=dark]) .glass,
+:root:not([data-theme=dark]) .panel,
+:root:not([data-theme=dark]) .topbar,
+:root:not([data-theme=dark]) .modal,
+:root:not([data-theme=dark]) .profile-menu,
+:root:not([data-theme=dark]) .auth-card {
+  color: #111827;
+  background: #FFFFFF;
+  border-color: #E5E7EB;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root:not([data-theme=dark]) .sidebar {
+  background: #F6F5F2;
+  border-right: 1px solid #E5E7EB;
+}
+
+:root:not([data-theme=dark]) .primary {
+  color: #FFFFFF;
+  background: #FF5A1F;
+  border: 1px solid #FF5A1F;
+  box-shadow: 0 3px 8px rgba(255, 90, 31, 0.18);
+}
+
+:root:not([data-theme=dark]) .primary:hover:not(:disabled) {
+  color: #FFFFFF;
+  background: #E04812;
+  border-color: #E04812;
+  box-shadow: 0 5px 12px rgba(255, 90, 31, 0.2);
+}
+
+:root:not([data-theme=dark]) .secondary {
+  color: #111827;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+}
+
+:root:not([data-theme=dark]) .secondary:hover:not(:disabled),
+:root:not([data-theme=dark]) .icon-button:hover:not(:disabled) {
+  color: #FF5A1F;
+  background: #FFF4ED;
+  border-color: #FFDEC9;
+}
+
+:root:not([data-theme=dark]) button:focus-visible,
+:root:not([data-theme=dark]) a:focus-visible {
+  outline: 2px solid #FF5A1F;
+  outline-offset: 3px;
+}
+
+:root:not([data-theme=dark]) input,
+:root:not([data-theme=dark]) textarea,
+:root:not([data-theme=dark]) select {
+  color: #111827;
+  background: #FFFFFF;
+  border-color: #E5E7EB;
+}
+
+:root:not([data-theme=dark]) input:focus,
+:root:not([data-theme=dark]) textarea:focus,
+:root:not([data-theme=dark]) select:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.15);
+}
+
+:root:not([data-theme=dark]) .brand-mark,
+:root:not([data-theme=dark]) .hero-logo {
+  color: #FFFFFF;
+  background: #FF5A1F;
+  border: 1px solid #FF5A1F;
+  box-shadow: none;
+}
+
+:root:not([data-theme=dark]) .brand-mark {
+  transform: none;
+}
+
+:root:not([data-theme=dark]) .brand-ai,
+:root:not([data-theme=dark]) .text-button,
+:root:not([data-theme=dark]) .auth-card .eyebrow,
+:root:not([data-theme=dark]) .auth-links button,
+:root:not([data-theme=dark]) .demo-link {
+  color: #FF5A1F;
+}
+
+:root:not([data-theme=dark]) .gradient-text {
+  color: #111827;
+  background: none;
+  animation: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+:root:not([data-theme=dark]) .badge,
+:root:not([data-theme=dark]) .ai-tag,
+:root:not([data-theme=dark]) .positive {
+  color: #FF5A1F;
+  background: #FFF4ED;
+  border: 1px solid #FFDEC9;
+}
+
+:root:not([data-theme=dark]) .positive-text,
+:root:not([data-theme=dark]) .kpi-bottom > span {
+  color: #FF5A1F;
+}
+
+:root:not([data-theme=dark]) .segmented {
+  background: #F6F5F2;
+  border-color: #E5E7EB;
+}
+
+:root:not([data-theme=dark]) .segmented .selected {
+  color: #FF5A1F;
+  background: #FFF4ED;
+  border: 1px solid #FFDEC9;
+  box-shadow: none;
+}
+
+:root:not([data-theme=dark]) .sidebar nav button {
+  color: #4B5563;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+:root:not([data-theme=dark]) .sidebar nav button.active {
+  color: #111827;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+:root:not([data-theme=dark]) .sidebar nav button:hover:not(.active) {
+  color: #FF5A1F;
+  background: #FFF4ED;
+  transform: translateX(2px);
+}
+
+:root:not([data-theme=dark]) .nav-indicator {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 11px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+:root:not([data-theme=dark]) .ai-tag {
+  border-color: #FFDEC9;
+}
+
+:root:not([data-theme=dark]) .plan-card {
+  color: #111827;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  box-shadow: none;
+}
+
+:root:not([data-theme=dark]) .plan-card .eyebrow,
+:root:not([data-theme=dark]) .plan-card p,
+:root:not([data-theme=dark]) .plan-spark,
+:root:not([data-theme=dark]) .greeting-wave {
+  color: #FF5A1F;
+}
+
+:root:not([data-theme=dark]) .plan-card button {
+  border-color: #E5E7EB;
+}
+
+:root:not([data-theme=dark]) .avatar,
+:root:not([data-theme=dark]) .workspace-avatar {
+  color: #FF5A1F;
+  background: #FFF4ED;
+  border-color: #FFDEC9;
+  box-shadow: none;
+}
+
+:root:not([data-theme=dark]) .status-dot,
+:root:not([data-theme=dark]) .notification-button i {
+  background: #FF5A1F;
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
+}
+
+:root:not([data-theme=dark]) .kpi::before {
+  background: radial-gradient(220px circle at var(--x, 50%) var(--y, 50%), rgba(255, 90, 31, 0.12), transparent 75%);
+}
+
+:root:not([data-theme=dark]) .kpi:hover {
+  border-color: #FFDEC9;
+  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.06);
+}
+
+:root:not([data-theme=dark]) .kpi:hover .metric-orb {
+  box-shadow: 0 0 16px rgba(255, 90, 31, 0.14);
+}
+
+:root:not([data-theme=dark]) .violet.metric-orb,
+:root:not([data-theme=dark]) .violet.orb {
+  color: #FF5A1F;
+  background: #FFF4ED;
+}
+
+:root:not([data-theme=dark]) .mint.metric-orb,
+:root:not([data-theme=dark]) .mint.orb {
+  color: #B76E1E;
+  background: #FFF3E3;
+}
+
+:root:not([data-theme=dark]) .blue.metric-orb {
+  color: #3199C8;
+  background: #EAF8FE;
+}
+
+:root:not([data-theme=dark]) .peach.metric-orb {
+  color: #FF5A1F;
+  background: #FFF4ED;
+}
+
+:root:not([data-theme=dark]) .page-head h1 {
+  color: #111827;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+:root:not([data-theme=dark]) .metric-value {
+  color: #111827;
+  font-size: 2.15rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+:root:not([data-theme=dark]) .section-head h2,
+:root:not([data-theme=dark]) .top-products .section-head h2,
+:root:not([data-theme=dark]) .actions-panel .section-head h2 {
+  color: #111827;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+:root:not([data-theme=dark]) .chart-summary strong,
+:root:not([data-theme=dark]) .chart-tooltip strong,
+:root:not([data-theme=dark]) .ring strong,
+:root:not([data-theme=dark]) .goal-amount,
+:root:not([data-theme=dark]) .top-product-row > strong,
+:root:not([data-theme=dark]) .financial-breakdown dd,
+:root:not([data-theme=dark]) .mini-stats strong {
+  color: #111827;
+  font-variant-numeric: tabular-nums;
+}
+
+:root:not([data-theme=dark]) .chart-legend span:first-child i {
+  background: #FF5A1F;
+}
+
+:root:not([data-theme=dark]) .chart-legend span:nth-child(2) i {
+  background: #F5AF64;
+}
+
+:root:not([data-theme=dark]) .revenue-bar {
+  fill: #FF5A1F;
+  filter: drop-shadow(0 2px 3px rgba(255, 90, 31, 0.14));
+}
+
+:root:not([data-theme=dark]) .revenue-bar-hatch {
+  pointer-events: none;
+}
+
+:root:not([data-theme=dark]) .profit-trend-line {
+  stroke: #F5AF64;
+}
+
+:root:not([data-theme=dark]) .revenue-svg circle {
+  fill: #5EC2F2;
+  stroke: #FFFFFF;
+}
+
+:root:not([data-theme=dark]) .ring-track {
+  fill: none;
+  stroke: #F3F4F6;
+  stroke-width: 19;
+}
+
+:root:not([data-theme=dark]) .ring-progress {
+  stroke: #FF5A1F;
+  filter: drop-shadow(0 2px 3px rgba(255, 90, 31, 0.16));
+}
+
+:root:not([data-theme=dark]) .metric-chart-column i,
+:root:not([data-theme=dark]) .goal-progress-track i {
+  background: #FF5A1F;
+}
+
+:root:not([data-theme=dark]) .goal-progress-track {
+  background: #F3F4F6;
+}
+
+:root:not([data-theme=dark]) .milestones .reached {
+  color: #111827;
+}
+
+:root:not([data-theme=dark]) .milestones .reached i {
+  color: #FF5A1F;
+  background: #FFF4ED;
+  border: 1px solid #FFDEC9;
+}
+
+:root:not([data-theme=dark]) .price-slider {
+  accent-color: #FF5A1F;
+}
+
+:root:not([data-theme=dark]) .insight {
+  color: #4B5563;
+  background: #FFF4ED;
+  border-color: #FFDEC9;
+}
+
+:root:not([data-theme=dark]) .product-art.violet,
+:root:not([data-theme=dark]) .product-art.peach {
+  color: #FF5A1F;
+  background: #FFF4ED;
+}
+
+:root:not([data-theme=dark]) .product-art.mint {
+  color: #B76E1E;
+  background: #FFF3E3;
+}
+
+:root:not([data-theme=dark]) .product-art.blue {
+  color: #3199C8;
+  background: #EAF8FE;
+}
+
+:root:not([data-theme=dark]) .top-product-row:hover,
+:root:not([data-theme=dark]) .action-row:hover,
+:root:not([data-theme=dark]) .profile-menu button:hover,
+:root:not([data-theme=dark]) .plan-options button:hover {
+  background: #FFF4ED;
+}
+
+:root:not([data-theme=dark]) .sidebar-scrim,
+:root:not([data-theme=dark]) .modal-backdrop {
+  background: rgba(17, 24, 39, 0.16);
+}
+
+:root:not([data-theme=dark]) .auth-card form .form-field input.auth-input:focus,
+:root:not([data-theme=dark]) .auth-card form .form-field select.auth-input:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.15);
+}
+
+@media (max-width: 480px) {
+  :root:not([data-theme=dark]) .page-head h1 {
+    font-size: 2rem;
+  }
+}

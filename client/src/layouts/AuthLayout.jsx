@@ -5,7 +5,7 @@ export const AuthLayout = ({ children }) => {
     <div className="layout auth-layout">
       <div className="auth-card">
         <header className="auth-header">
-          <h1>DropPilot AI</h1>
+          <h1>DropPilot</h1>
         </header>
         <div className="auth-content">
           {children}

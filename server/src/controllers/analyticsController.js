@@ -4,50 +4,24 @@ import { sampleOrderRecords } from '../fixtures/sampleData.js';
 import { aggregateOrdersProfit } from '../services/profitAggregationService.js';
 import { formatSuccess } from '../utils/responseFormatter.js';
 
-const getOrdersForAnalytics = async (userId) => {
-  const isDbConnected = mongoose.connection.readyState === 1;
-  if (isDbConnected) {
-    const query = {};
-    if (userId) query.userId = userId;
-    const dbOrders = await Order.find(query);
-    if (dbOrders && dbOrders.length > 0) {
-      return dbOrders;
-    }
-  }
-  return sampleOrderRecords.map((o) => ({
-    productName: o.productName,
-    unitsSold: o.unitsSold,
-    sellingPrice: o.sellingPrice,
-    cogs: o.cogs,
-    shippingCost: o.shippingCost,
-    platformFee: o.platformFee,
-    adSpend: o.adSpend,
-    otherExpenses: 0,
-    netProfit: o.netProfit,
-    orderDate: o.orderDate,
-  }));
-};
+const getOrdersForUser = async (userId) => mongoose.connection.readyState === 1
+  ? Order.find({ userId })
+  : sampleOrderRecords;
 
 export const getSummary = async (req, res, next) => {
   try {
-    const orders = await getOrdersForAnalytics(req.user?.id);
-    const metrics = aggregateOrdersProfit(orders);
-
-    const f = metrics.financials;
-
-    return res.json(
+    const metrics = aggregateOrdersProfit(await getOrdersForUser(req.user.id), { dataSource: mongoose.connection.readyState === 1 ? 'database' : 'sample_orders' });
+    res.json(
       formatSuccess(
         {
-          totalRevenue: f.revenue,
-          totalCogs: f.cogs,
-          totalCost: f.totalCost,
-          totalProfit: f.netProfit,
-          netMargin: f.profitMarginPercent,
-          unitsSold: f.totalUnitsSold,
-          financials: f,
-          productBreakdown: metrics.productBreakdown,
+          totalRevenue: metrics.financials.revenue,
+          totalCogs: metrics.financials.supplierCosts,
+          totalProfit: metrics.financials.netProfit,
+          netMargin: metrics.financials.profitMarginPercent,
+          totalOrders: metrics.totalOrders,
+          dataSource: metrics.dataSource,
         },
-        'Analytics summary retrieved successfully'
+        'Analytics summary retrieved'
       )
     );
   } catch (err) {
@@ -57,22 +31,29 @@ export const getSummary = async (req, res, next) => {
 
 export const getCharts = async (req, res, next) => {
   try {
-    const orders = await getOrdersForAnalytics(req.user?.id);
-    const metrics = aggregateOrdersProfit(orders);
-    const rev = metrics.financials.revenue || 124820;
-    const profit = metrics.financials.netProfit || 42618;
-
-    return res.json(
+    const orders = await getOrdersForUser(req.user.id);
+    const grouped = new Map();
+    for (const order of orders) {
+      const key = new Date(order.orderDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      const entry = grouped.get(key) || { revenue: 0, profit: 0 };
+      entry.revenue += Number(order.unitsSold) * Number(order.sellingPrice);
+      entry.profit += Number(order.netProfit);
+      grouped.set(key, entry);
+    }
+    const points = [...grouped.entries()].map(([label, value]) => ({ label, ...value }));
+    res.json(
       formatSuccess(
         {
-          labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
-          revenueData: [32000, 48000, 65000, 89000, 112000, rev],
-          profitData: [11000, 16500, 22000, 31000, 38500, profit],
+          labels: points.map(point => point.label),
+          revenueData: points.map(point => Number(point.revenue.toFixed(2))),
+          profitData: points.map(point => Number(point.profit.toFixed(2))),
+          dataSource: mongoose.connection.readyState === 1 ? 'database' : 'sample_orders',
         },
-        'Chart data retrieved successfully'
+        'Chart data retrieved'
       )
     );
   } catch (err) {
     next(err);
   }
 };
+

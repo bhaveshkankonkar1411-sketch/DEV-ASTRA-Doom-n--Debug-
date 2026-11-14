@@ -1,0 +1,628 @@
+/* Fluent desktop geometry and editorial type layer. Imported last by App.jsx. */
+:root {
+  --fluent-canvas: #f6f5f2;
+  --fluent-surface: #ffffff;
+  --fluent-ink: #111827;
+  --fluent-border: #cbd5e1;
+  --fluent-orange: #ff5a1f;
+  --fluent-display: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --fluent-ui: "Segoe UI Variable Display", "Segoe UI", "Plus Jakarta Sans", sans-serif;
+  font-family: var(--fluent-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  margin: 0;
+  background: var(--fluent-canvas);
+  overflow-x: hidden;
+}
+
+body,
+button,
+input,
+select,
+textarea,
+.landing-page {
+  font-family: var(--fluent-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+h1,
+h2,
+h3,
+.page-head h1,
+.section-head h2,
+.auth-story h1,
+.auth-card h2,
+.landing-page h1,
+.landing-page h2,
+.landing-page h3 {
+  font-family: var(--fluent-display);
+  font-weight: 700;
+  color: var(--fluent-ink);
+}
+
+/* Full-bleed Windows desktop workspace */
+.app-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background: var(--fluent-canvas);
+}
+
+.sidebar {
+  position: sticky;
+  inset: 0 auto auto 0;
+  width: 280px;
+  min-width: 280px;
+  height: 100vh;
+  flex-basis: 280px;
+  padding: 22px 18px 18px;
+  border: 0;
+  border-right: 1px solid var(--fluent-border);
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+  overflow-y: auto;
+}
+
+.sidebar .brand {
+  min-height: 46px;
+  font-size: 20px;
+}
+
+.sidebar nav button {
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sidebar nav button:hover,
+.sidebar nav button.active {
+  border-color: var(--fluent-border);
+  background: #f8fafc;
+}
+
+.nav-indicator {
+  width: 3px;
+  border-radius: 0;
+  background: var(--fluent-orange);
+}
+
+.workspace-switch,
+.plan-card,
+.profile-menu,
+.modal,
+.toast,
+.panel,
+.glass {
+  border-color: var(--fluent-border);
+}
+
+.workspace-switch,
+.plan-card {
+  border-radius: 4px;
+}
+
+.main-shell {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  background: var(--fluent-canvas);
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  width: 100%;
+  height: 68px;
+  min-height: 68px;
+  padding: 0 32px;
+  border: 0;
+  border-bottom: 1px solid var(--fluent-border);
+  border-radius: 0;
+  background: rgba(255, 255, 255, .94);
+  box-shadow: none;
+  backdrop-filter: blur(20px);
+}
+
+.command-trigger {
+  min-width: min(560px, 52vw);
+  min-height: 42px;
+  border: 1px solid var(--fluent-border);
+  border-radius: 4px;
+  background: #fff;
+  font-size:16px;
+}
+
+.command-trigger:focus-visible,
+.command-trigger:hover {
+  border-color: var(--fluent-ink);
+}
+
+.profile-trigger,
+.icon-button,
+.primary,
+.secondary,
+.text-button,
+input,
+select,
+textarea {
+  border-radius: 4px;
+}
+
+.workspace {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px 32px 40px;
+}
+
+.page-enter {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.page-enter > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.page-head {
+  min-height: 112px;
+  margin: 0;
+  padding: 8px 0 20px;
+  border-bottom: 1px solid var(--fluent-border);
+}
+
+.page-head h1 {
+  margin-top: 8px;
+  font-size: 2.75rem;
+  line-height: 1.04;
+  letter-spacing: -.035em;
+}
+
+.page-head p {
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.eyebrow,
+.nav-label,
+.table-labels,
+.lp-kicker {
+  font-family: var(--fluent-ui);
+  letter-spacing: .13em;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0;
+}
+
+.panel,
+.kpi,
+.revenue-panel,
+.goal-panel,
+.top-products,
+.actions-panel,
+.product-card,
+.supplier-card {
+  border: 1px solid var(--fluent-border);
+  border-radius: 6px;
+  background: var(--fluent-surface);
+  box-shadow: 0 2px 8px rgba(17, 24, 39, .035);
+}
+
+.panel:hover,
+.kpi:hover,
+.product-card:hover,
+.supplier-card:hover {
+  border-color: var(--fluent-ink);
+  box-shadow: 0 6px 18px rgba(17, 24, 39, .06);
+}
+
+.kpi {
+  min-height: 176px;
+  padding: 24px;
+}
+
+.kpi-top {
+  font-size: 16px;
+}
+
+.metric-value {
+  margin-top: 18px;
+  font-family: var(--fluent-display);
+  font-size: clamp(2.5rem, 3vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -.035em;
+}
+
+.metric-orb,
+.orb,
+.avatar,
+.workspace-avatar,
+.action-count,
+.badge,
+.ai-tag {
+  border-radius: 4px;
+}
+
+.dashboard-chart-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(340px, .8fr);
+  gap: 20px;
+  margin: 0;
+}
+
+.dashboard-bottom-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, .65fr);
+  gap: 20px;
+  margin: 0;
+}
+
+.section-head h2,
+.product-content h2,
+.supplier-card h2 {
+  font-size: 1.75rem;
+  line-height: 1.15;
+}
+
+.chart-summary > strong,
+.ring strong,
+.goal-amount,
+.mini-stats strong {
+  font-family: var(--fluent-display);
+}
+
+.top-product-row,
+.action-row {
+  min-height: 72px;
+  border-radius: 2px;
+}
+
+.top-product-row:hover,
+.action-row:hover {
+  background: #f8fafc;
+}
+
+.product-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.workspace-grid {
+  width: 100%;
+}
+
+.modal {
+  border-radius: 6px;
+}
+
+/* Edge-to-edge authentication workspace */
+.auth-shell {
+  width: 100vw;
+  max-width: none;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--fluent-canvas);
+}
+
+.auth-header {
+  height: 68px;
+  padding: 0 48px;
+  border-bottom: 1px solid var(--fluent-border);
+  background: rgba(255, 255, 255, .82);
+}
+
+.auth-main {
+  grid-template-columns: minmax(0, 1.35fr) minmax(440px, .65fr);
+  gap: 6vw;
+  width: 100%;
+  padding: 48px 6vw;
+}
+
+.auth-story h1 {
+  max-width: 920px;
+  margin: 24px 0;
+  font-size: clamp(4rem, 6vw, 6.5rem);
+  line-height: .96;
+  letter-spacing: -.045em;
+}
+
+.auth-story > p {
+  max-width: 720px;
+  font-size: 21px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 560px;
+  padding: 46px;
+  border: 1px solid var(--fluent-border);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 14px 45px rgba(17, 24, 39, .08);
+}
+
+.auth-card h2 {
+  font-size: 2.8rem;
+  line-height: 1.02;
+  letter-spacing: -.035em;
+}
+
+.auth-card > p,
+.auth-card .form-field > span,
+.auth-links,
+.demo-link {
+  font-size:16px;
+}
+
+.auth-card input,
+.auth-card select {
+  min-height: 50px;
+  border: 1px solid var(--fluent-border);
+}
+
+.auth-footer {
+  padding: 18px 48px;
+  border-top: 1px solid var(--fluent-border);
+}
+
+/* Full-width editorial landing page */
+.landing-page {
+  width: 100vw;
+  min-height: 100vh;
+}
+
+.lp-nav {
+  top: 12px;
+  width: min(1600px, 94vw);
+  border-radius: 4px;
+}
+
+.lp-nav.is-scrolled {
+  border-color: var(--fluent-border);
+  box-shadow: 0 5px 18px rgba(17, 24, 39, .07);
+}
+
+.lp-hero {
+  min-height: 100vh;
+  padding-right: max(3vw, calc((100vw - 1600px) / 2));
+  padding-left: max(3vw, calc((100vw - 1600px) / 2));
+}
+
+.lp-hero-copy {
+  width: min(760px, 50%);
+}
+
+.lp-hero h1 {
+  font-size: clamp(3.25rem, 5.5vw, 5rem);
+  font-weight: 700;
+  line-height: .98;
+  letter-spacing: -.045em;
+}
+
+.lp-hero-copy > p {
+  max-width: 700px;
+  font-size: 21px;
+}
+
+.lp-section,
+.lp-ticker,
+.lp-footer {
+  width: min(1600px, 94vw);
+  max-width: 1600px;
+}
+
+.lp-section-heading {
+  max-width: 940px;
+}
+
+.lp-section-heading h2,
+.lp-final-card h2 {
+  font-size: clamp(3rem, 4.4vw, 4.75rem);
+  font-weight: 700;
+}
+
+.lp-compare-card,
+.lp-feature,
+.lp-final-card {
+  border-color: var(--fluent-border);
+  border-radius: 6px;
+  box-shadow: 0 5px 22px rgba(17, 24, 39, .055);
+}
+
+.lp-toggle,
+.lp-toggle button,
+.lp-button,
+.lp-pill,
+.lp-chaos-card,
+.lp-output-card,
+.lp-planner,
+.lp-listing-sheet,
+.lp-store,
+.lp-sync-status {
+  border-radius: 4px;
+}
+
+.lp-button {
+  font-family: var(--fluent-ui);
+}
+
+.lp-feature h3,
+.lp-compare-copy h3 {
+  font-size: clamp(2rem, 2.4vw, 2.75rem);
+}
+
+.lp-feature p,
+.lp-compare-copy > p,
+.lp-section-heading p,
+.lp-final-card p {
+  font-size: 16px;
+}
+
+.lp-bento {
+  gap: 20px;
+}
+
+.lp-output-card.profit span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lp-line-icon {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.lp-play {
+  color: currentColor;
+}
+
+@media (min-width: 1700px) {
+  .workspace {
+    padding: 28px 40px 48px;
+  }
+
+  .kpi {
+    min-height: 188px;
+    padding: 28px;
+  }
+
+  .dashboard-chart-grid {
+    grid-template-columns: minmax(0, 2.25fr) minmax(380px, .75fr);
+  }
+}
+
+@media (max-width: 1180px) {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    z-index: 50;
+    width: 280px;
+    min-width: 280px;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-chart-grid,
+  .dashboard-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-main {
+    grid-template-columns: 1fr 480px;
+    gap: 36px;
+    padding: 40px;
+  }
+
+  .auth-story h1 {
+    font-size: 4.25rem;
+  }
+}
+
+@media (max-width: 800px) {
+  .topbar {
+    height: 64px;
+    min-height: 64px;
+    padding: 0 18px;
+  }
+
+  .workspace {
+    padding: 20px 18px 32px;
+  }
+
+  .page-enter {
+    gap: 16px;
+  }
+
+  .page-head h1 {
+    font-size: 2.35rem;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .metric-value {
+    font-size: 2.2rem;
+  }
+
+  .auth-header {
+    padding: 0 24px;
+  }
+
+  .auth-main {
+    display: block;
+    width: 100%;
+    max-width: 620px;
+    padding: 32px 20px;
+  }
+
+  .auth-card {
+    max-width: none;
+    padding: 34px 28px;
+  }
+
+  .auth-card h2 {
+    font-size: 2.35rem;
+  }
+
+  .auth-footer {
+    padding: 18px 24px;
+  }
+
+  .lp-hero-copy {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi {
+    min-height: 150px;
+  }
+
+  .page-head h1 {
+    font-size: 2.1rem;
+  }
+
+  .auth-card {
+    padding: 30px 22px;
+  }
+}

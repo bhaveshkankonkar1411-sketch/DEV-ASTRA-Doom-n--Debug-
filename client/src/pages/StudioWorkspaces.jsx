@@ -184,8 +184,7 @@ export function Discovery({
       <p><b>Hugging Face Semantic Search Active (`sentence-transformers/all-MiniLM-L6-v2`)</b>: Matches products by conceptual meaning and dense vector distance rather than exact substring matching.</p>
     </div>}
     {sort === 'opportunity' && topExplanation && (
-      <div className="panel" style={{ marginBottom: '16px', background: 'var(--canvas-subtle)', border: '1.5px solid var(--line)' }}>
-        <div className="section-head" style={{ marginBottom: '8px' }}>
+<div className="panel opportunity-spotlight" style={{ marginBottom: '16px', background: 'var(--canvas-subtle)', border: '1.5px solid var(--line)' }}>        <div className="section-head" style={{ marginBottom: '8px' }}>
           <span className="badge positive">⭐ AI Opportunity Spotlight · Score: {topExplanation.score}/100</span>
           <span className="badge">Grounded by Gemini & ML Scoring Engine</span>
         </div>
@@ -667,8 +666,7 @@ export function Goals({
             <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--muted, #94a3b8)', marginBottom: '8px' }}>Action Plan</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {aiAdvice.suggestedActions.map((a, i) => (
-                <div key={i} style={{ padding: '10px 12px', background: 'var(--panel)', borderRadius: '8px', border: '1px solid var(--line)', borderLeft: '3px solid #10b981' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+<div className="recovery-action" key={i} style={{ padding: '10px 12px', background: 'var(--panel)', borderRadius: '8px', border: '1px solid var(--line)', borderLeft: '3px solid #10b981' }}>                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <strong>{a.action}</strong>
                     {a.confidence && (
                       <span className="badge positive" style={{ fontSize: '0.7rem' }}>

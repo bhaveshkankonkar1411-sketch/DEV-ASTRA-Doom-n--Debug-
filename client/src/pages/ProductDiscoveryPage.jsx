@@ -1,13 +1,6 @@
-import React from 'react';
+import { Discovery } from './StudioWorkspaces';
 
-export const ProductDiscoveryPage = () => {
-  return (
-    <div className="page product-discovery-page">
-      <h2>Product Discovery</h2>
-      <p>Explore high-potential dropshipping products, search, and filter by niche.</p>
-    </div>
-  );
-};
-
-export default ProductDiscoveryPage;
+export default function ProductDiscoveryPage({ onSelect, demoMode, onProductAction }) {
+  return <Discovery onSelect={onSelect} demoMode={demoMode} onProductAction={onProductAction} />;
+}
 

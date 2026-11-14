@@ -3,8 +3,8 @@ export const MetricChart = ({ data = [], title = 'Performance metric' }) => {
   const maximum = Math.max(1, ...values);
 
   return (
-    <figure className="panel" aria-label={title}>
-      <h2>{title}</h2>
+    <figure className="panel legacy-chart" aria-label={title}>
+      <figcaption><span>LIVE METRIC</span><h2>{title}</h2></figcaption>
       <div className="metric-chart" role="img" aria-label={`${title} bar chart`}>
         {data.map((point, index) => (
           <div className="metric-chart-column" key={point.label ?? index}>
